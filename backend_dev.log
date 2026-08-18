@@ -1,0 +1,568 @@
+Watching for file changes with StatReloader
+Not Found: /
+[14/Aug/2026 15:48:12] "GET / HTTP/1.1" 404 3100
+Not Found: /
+[14/Aug/2026 15:49:31] "GET / HTTP/1.1" 404 3100
+Not Found: /login
+[14/Aug/2026 15:49:37] "GET /login HTTP/1.1" 404 3133
+Not Found: /api/login
+[14/Aug/2026 15:49:46] "GET /api/login HTTP/1.1" 404 3145
+Not Found: /
+[14/Aug/2026 15:49:54] "GET / HTTP/1.1" 404 3100
+Unauthorized: /api/mirror/ventas-detalle/
+[14/Aug/2026 15:50:28] "GET /api/mirror/ventas-detalle/ HTTP/1.1" 401 5283
+[14/Aug/2026 15:51:28] "OPTIONS /api/auth/login/ HTTP/1.1" 200 0
+[14/Aug/2026 15:54:03] "OPTIONS /api/auth/login/ HTTP/1.1" 200 0
+Not Found: /
+[14/Aug/2026 15:57:06] "GET / HTTP/1.1" 404 3100
+[14/Aug/2026 15:58:35] "OPTIONS /api/auth/login/ HTTP/1.1" 200 0
+[14/Aug/2026 15:58:36] "POST /api/auth/login/ HTTP/1.1" 200 539
+[14/Aug/2026 15:58:36] "OPTIONS /api/auth/me/ HTTP/1.1" 200 0
+[14/Aug/2026 15:58:36] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 15:58:36] "OPTIONS /api/contests/ HTTP/1.1" 200 0
+[14/Aug/2026 15:58:36] "OPTIONS /api/contests/ HTTP/1.1" 200 0
+[14/Aug/2026 15:58:36] "GET /api/contests/ HTTP/1.1" 200 2
+[14/Aug/2026 15:58:36] "GET /api/contests/ HTTP/1.1" 200 2
+[14/Aug/2026 15:58:44] "OPTIONS /api/exports/sales/?format=csv HTTP/1.1" 200 0
+Not Found: /api/exports/sales/
+[14/Aug/2026 15:58:44] "GET /api/exports/sales/?format=csv HTTP/1.1" 404 23
+[14/Aug/2026 15:58:49] "OPTIONS /api/exports/sales/?format=xlsx HTTP/1.1" 200 0
+Not Found: /api/exports/sales/
+[14/Aug/2026 15:58:49] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 15:58:50] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 15:58:50] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 15:58:50] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 15:58:51] "GET /api/exports/sales/?format=csv HTTP/1.1" 404 23
+[14/Aug/2026 15:58:51] "OPTIONS /api/exports/inventory/?format=csv HTTP/1.1" 200 0
+Not Found: /api/exports/inventory/
+[14/Aug/2026 15:58:51] "GET /api/exports/inventory/?format=csv HTTP/1.1" 404 23
+[14/Aug/2026 15:58:52] "OPTIONS /api/exports/prices/?format=csv HTTP/1.1" 200 0
+Not Found: /api/exports/prices/
+[14/Aug/2026 15:58:52] "GET /api/exports/prices/?format=csv HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 15:58:52] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 15:58:52] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 15:58:52] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+[14/Aug/2026 15:58:53] "OPTIONS /api/exports/inventory/?format=xlsx HTTP/1.1" 200 0
+Not Found: /api/exports/inventory/
+[14/Aug/2026 15:58:53] "GET /api/exports/inventory/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 15:58:53] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 15:58:53] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 15:58:53] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 15:58:54] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/inventory/
+[14/Aug/2026 15:58:54] "GET /api/exports/inventory/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 15:58:55] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 15:58:55] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 15:58:56] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Unauthorized: /api/auth/me/
+[14/Aug/2026 16:01:37] "GET /api/auth/me/ HTTP/1.1" 401 58
+[14/Aug/2026 16:02:47] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:02:47] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:02:47] "GET /api/contests/ HTTP/1.1" 200 2
+[14/Aug/2026 16:02:47] "GET /api/contests/ HTTP/1.1" 200 2
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:02:52] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:02:55] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:02:55] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:02:55] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+[14/Aug/2026 16:03:16] "OPTIONS /api/auth/login/ HTTP/1.1" 200 0
+[14/Aug/2026 16:03:16] "POST /api/auth/login/ HTTP/1.1" 200 539
+[14/Aug/2026 16:03:16] "OPTIONS /api/auth/me/ HTTP/1.1" 200 0
+[14/Aug/2026 16:03:16] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:03:16] "OPTIONS /api/contests/ HTTP/1.1" 200 0
+[14/Aug/2026 16:03:16] "OPTIONS /api/contests/ HTTP/1.1" 200 0
+[14/Aug/2026 16:03:16] "GET /api/contests/ HTTP/1.1" 200 2
+[14/Aug/2026 16:03:16] "GET /api/contests/ HTTP/1.1" 200 2
+[14/Aug/2026 16:03:18] "OPTIONS /api/exports/sales/?format=csv HTTP/1.1" 200 0
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:03:18] "GET /api/exports/sales/?format=csv HTTP/1.1" 404 23
+[14/Aug/2026 16:03:20] "OPTIONS /api/exports/sales/?format=xlsx HTTP/1.1" 200 0
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:03:20] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:03:20] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:03:21] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:03:21] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:03:21] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+[14/Aug/2026 16:03:21] "OPTIONS /api/exports/prices/?format=csv HTTP/1.1" 200 0
+Not Found: /api/exports/prices/
+[14/Aug/2026 16:03:21] "GET /api/exports/prices/?format=csv HTTP/1.1" 404 23
+Not Found: /api/exports/prices/
+[14/Aug/2026 16:03:22] "GET /api/exports/prices/?format=csv HTTP/1.1" 404 23
+[14/Aug/2026 16:03:22] "OPTIONS /api/exports/prices/?format=xlsx HTTP/1.1" 200 0
+Not Found: /api/exports/prices/
+[14/Aug/2026 16:03:22] "GET /api/exports/prices/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/prices/
+[14/Aug/2026 16:03:22] "GET /api/exports/prices/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:03:39] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+[14/Aug/2026 16:03:41] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:03:41] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:03:42] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:03:42] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:03:42] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:03:42] "GET /api/auth/me/ HTTP/1.1" 200 81
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:03:43] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:03:43] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:03:43] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:03:44] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+[14/Aug/2026 16:03:51] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:03:51] "GET /api/auth/me/ HTTP/1.1" 200 81
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:03:54] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:03:55] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:03:55] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:03:56] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:03:56] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:03:56] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:03:56] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:03:56] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:03:57] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:03:57] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:03:57] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:03:57] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+[14/Aug/2026 16:03:58] "OPTIONS /api/exports/prices/?format=xlsx HTTP/1.1" 200 0
+Not Found: /api/exports/prices/
+[14/Aug/2026 16:03:58] "GET /api/exports/prices/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/prices/
+[14/Aug/2026 16:03:58] "GET /api/exports/prices/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/inventory/
+[14/Aug/2026 16:03:59] "GET /api/exports/inventory/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/inventory/
+[14/Aug/2026 16:03:59] "GET /api/exports/inventory/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:00] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:00] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/prices/
+[14/Aug/2026 16:04:00] "GET /api/exports/prices/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/prices/
+[14/Aug/2026 16:04:01] "GET /api/exports/prices/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/prices/
+[14/Aug/2026 16:04:01] "GET /api/exports/prices/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/prices/
+[14/Aug/2026 16:04:01] "GET /api/exports/prices/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:24] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:24] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:24] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:24] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:26] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:26] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:26] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:26] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:26] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:27] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:27] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:27] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:27] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:28] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:28] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:35] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:35] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:35] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:35] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+[14/Aug/2026 16:04:47] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:04:47] "GET /api/auth/me/ HTTP/1.1" 200 81
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:48] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:49] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:49] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+[14/Aug/2026 16:04:51] "OPTIONS /api/auth/me/ HTTP/1.1" 200 0
+[14/Aug/2026 16:04:51] "OPTIONS /api/auth/me/ HTTP/1.1" 200 0
+[14/Aug/2026 16:04:51] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:04:51] "GET /api/auth/me/ HTTP/1.1" 200 81
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:53] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:53] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:53] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:53] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:53] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:54] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:55] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:55] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:55] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:55] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:58] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:58] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:58] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:58] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/inventory/
+[14/Aug/2026 16:04:59] "GET /api/exports/inventory/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/inventory/
+[14/Aug/2026 16:04:59] "GET /api/exports/inventory/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:04:59] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:05:00] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/prices/
+[14/Aug/2026 16:05:00] "GET /api/exports/prices/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/prices/
+[14/Aug/2026 16:05:01] "GET /api/exports/prices/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/prices/
+[14/Aug/2026 16:05:01] "GET /api/exports/prices/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:05:22] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:05:23] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:05:23] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:05:23] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:05:23] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:05:24] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:05:24] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:05:24] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:05:24] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/prices/
+[14/Aug/2026 16:05:25] "GET /api/exports/prices/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/prices/
+[14/Aug/2026 16:05:25] "GET /api/exports/prices/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/prices/
+[14/Aug/2026 16:05:25] "GET /api/exports/prices/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/prices/
+[14/Aug/2026 16:05:25] "GET /api/exports/prices/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:05:26] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+[14/Aug/2026 16:05:26] "OPTIONS /api/exports/inventory/?format=xlsx HTTP/1.1" 200 0
+Not Found: /api/exports/inventory/
+[14/Aug/2026 16:05:26] "GET /api/exports/inventory/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/inventory/
+[14/Aug/2026 16:05:26] "GET /api/exports/inventory/?format=xlsx HTTP/1.1" 404 23
+C:\Users\Janus I5\Desktop\Info_Diz\Backend\apps\mirror\views.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+August 14, 2026 - 15:31:39
+Django version 5.2.17, using settings 'Backend.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CTRL-BREAK.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+C:\Users\Janus I5\Desktop\Info_Diz\Backend\apps\mirror\views.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+August 14, 2026 - 16:09:11
+Django version 5.2.17, using settings 'Backend.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CTRL-BREAK.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+C:\Users\Janus I5\Desktop\Info_Diz\Backend\apps\mirror\models.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+August 14, 2026 - 16:09:15
+Django version 5.2.17, using settings 'Backend.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CTRL-BREAK.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+C:\Users\Janus I5\Desktop\Info_Diz\Backend\apps\exports\views.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+August 14, 2026 - 16:09:27
+Django version 5.2.17, using settings 'Backend.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CTRL-BREAK.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+C:\Users\Janus I5\Desktop\Info_Diz\Backend\apps\exports\views.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+August 14, 2026 - 16:09:43
+Django version 5.2.17, using settings 'Backend.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CTRL-BREAK.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+[14/Aug/2026 16:13:41] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:13:41] "GET /api/auth/me/ HTTP/1.1" 200 81
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:13:42] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:13:42] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:13:43] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:13:43] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:13:43] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+[14/Aug/2026 16:13:58] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:13:58] "GET /api/auth/me/ HTTP/1.1" 200 81
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:13:59] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:14:01] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:14:01] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:14:01] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:14:01] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:14:02] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:14:02] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:14:02] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:14:02] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:14:03] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:14:03] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:14:03] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:14:04] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:14:04] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:14:04] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:14:04] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:14:55] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:14:56] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:14:58] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:14:58] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+[14/Aug/2026 16:15:13] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:15:13] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:15:17] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:15:17] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:15:18] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:15:18] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:15:18] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:15:18] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:15:19] "GET /api/contests/ HTTP/1.1" 200 2
+[14/Aug/2026 16:15:19] "GET /api/contests/ HTTP/1.1" 200 2
+[14/Aug/2026 16:15:31] "POST /api/auth/login/ HTTP/1.1" 200 539
+[14/Aug/2026 16:15:31] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:15:31] "GET /api/contests/ HTTP/1.1" 200 2
+[14/Aug/2026 16:15:31] "GET /api/contests/ HTTP/1.1" 200 2
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:15:35] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:15:35] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:15:35] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:15:36] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:15:36] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:15:37] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:15:37] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:15:38] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:15:38] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:15:38] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:15:38] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:15:39] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:15:39] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+[14/Aug/2026 16:16:38] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:16:38] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:16:38] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:16:38] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:16:38] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:16:38] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:16:39] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:16:39] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:16:39] "GET /api/contests/ HTTP/1.1" 200 2
+[14/Aug/2026 16:16:39] "GET /api/contests/ HTTP/1.1" 200 2
+[14/Aug/2026 16:16:41] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:16:41] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:16:41] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:16:41] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:16:41] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:16:41] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:16:42] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:16:42] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:16:42] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:16:42] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:16:43] "GET /api/contests/ HTTP/1.1" 200 2
+[14/Aug/2026 16:16:43] "GET /api/contests/ HTTP/1.1" 200 2
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:16:48] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:16:48] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:16:48] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:16:49] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:16:49] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:16:49] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:16:49] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:16:58] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:16:58] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:16:58] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:16:58] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+Not Found: /api/exports/sales/
+[14/Aug/2026 16:16:58] "GET /api/exports/sales/?format=xlsx HTTP/1.1" 404 23
+[14/Aug/2026 16:24:54] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:24:54] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:24:54] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:24:54] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:25:14] "OPTIONS /api/exports/sales/?fecha_desde=2026-08-13&fecha_hasta=2026-08-13&filetype=xlsx HTTP/1.1" 200 0
+[14/Aug/2026 16:25:22] "GET /api/exports/sales/?fecha_desde=2026-08-13&fecha_hasta=2026-08-13&filetype=xlsx HTTP/1.1" 200 144288
+[14/Aug/2026 16:26:27] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:26:27] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:26:28] "OPTIONS /api/exports/sales/?filetype=xlsx HTTP/1.1" 200 0
+[14/Aug/2026 16:26:37] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:26:37] "GET /api/auth/me/ HTTP/1.1" 200 81
+[14/Aug/2026 16:26:42,911] - Broken pipe from ('127.0.0.1', 65329)
+[14/Aug/2026 16:26:44] "OPTIONS /api/exports/sales/?fecha_desde=2026-08-13&fecha_hasta=2026-08-13&filetype=xlsx HTTP/1.1" 200 0
+[14/Aug/2026 16:26:48] "GET /api/exports/sales/?fecha_desde=2026-08-13&fecha_hasta=2026-08-13&filetype=xlsx HTTP/1.1" 200 144287
+C:\Users\Janus I5\Desktop\Info_Diz\Backend\apps\exports\views.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+August 14, 2026 - 16:10:11
+Django version 5.2.17, using settings 'Backend.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CTRL-BREAK.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+[14/Aug/2026 16:28:55] "POST /api/auth/login/ HTTP/1.1" 200 539
+[14/Aug/2026 16:28:59] "GET /api/exports/sales/?fecha_desde=2026-08-13&fecha_hasta=2026-08-13 HTTP/1.1" 200 1995988
+C:\Users\Janus I5\Desktop\Info_Diz\Backend\apps\exports\views.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+August 14, 2026 - 16:28:50
+Django version 5.2.17, using settings 'Backend.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CTRL-BREAK.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+C:\Users\Janus I5\Desktop\Info_Diz\Backend\apps\exports\views.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+August 14, 2026 - 16:30:18
+Django version 5.2.17, using settings 'Backend.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CTRL-BREAK.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+C:\Users\Janus I5\Desktop\Info_Diz\Backend\apps\exports\views.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+August 14, 2026 - 16:30:31
+Django version 5.2.17, using settings 'Backend.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CTRL-BREAK.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader

@@ -1,0 +1,118 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, Consolas, monospace;
+
+  --color-bg: #fdfcff;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f4f3ec;
+  --color-border: #e5e4e7;
+  --color-text: #6b6375;
+  --color-text-h: #08060d;
+
+  --color-accent-50: #eff6ff;
+  --color-accent-100: #dbeafe;
+  --color-accent-400: #60a5fa;
+  --color-accent-500: #2563eb;
+  --color-accent-600: #1d4ed8;
+  --color-accent-soft: rgba(37, 99, 235, 0.1);
+  --color-accent-border: rgba(37, 99, 235, 0.5);
+
+  --color-danger: #e5484d;
+  --color-danger-soft: rgba(229, 72, 77, 0.1);
+
+  --shadow-soft: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05);
+}
+
+/* Sin eleccion explicita (sin .light/.dark en <html>): sigue la preferencia del sistema. */
+@media (prefers-color-scheme: dark) {
+  @theme {
+    --color-bg: #16171d;
+    --color-surface: #1c1d24;
+    --color-surface-muted: #1f2028;
+    --color-border: #2e303a;
+    --color-text: #9ca3af;
+    --color-text-h: #f3f4f6;
+
+    --color-accent-500: #60a5fa;
+    --color-accent-soft: rgba(96, 165, 250, 0.15);
+    --color-accent-border: rgba(96, 165, 250, 0.5);
+
+    --shadow-soft: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -2px rgb(0 0 0 / 0.25);
+  }
+}
+
+/* Eleccion explicita del usuario (boton de tema), persistida en localStorage.
+   Mayor especificidad que los bloques anteriores para poder anular tanto el
+   tema claro por defecto como la preferencia del sistema. */
+:root.dark {
+  --color-bg: #16171d;
+  --color-surface: #1c1d24;
+  --color-surface-muted: #1f2028;
+  --color-border: #2e303a;
+  --color-text: #9ca3af;
+  --color-text-h: #f3f4f6;
+
+  --color-accent-500: #60a5fa;
+  --color-accent-soft: rgba(96, 165, 250, 0.15);
+  --color-accent-border: rgba(96, 165, 250, 0.5);
+
+  --shadow-soft: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -2px rgb(0 0 0 / 0.25);
+}
+
+:root.light {
+  --color-bg: #fdfcff;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f4f3ec;
+  --color-border: #e5e4e7;
+  --color-text: #6b6375;
+  --color-text-h: #08060d;
+
+  --color-accent-500: #2563eb;
+  --color-accent-soft: rgba(37, 99, 235, 0.1);
+  --color-accent-border: rgba(37, 99, 235, 0.5);
+
+  --shadow-soft: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05);
+}
+
+@layer base {
+  html {
+    color-scheme: light dark;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    letter-spacing: 0.18px;
+    color: var(--color-text);
+    background: var(--color-bg);
+  }
+
+  #root {
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-sans);
+    font-weight: 500;
+    color: var(--color-text-h);
+  }
+
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    border-radius: 4px;
+    padding: 2px 6px;
+    color: var(--color-text-h);
+    background: var(--color-surface-muted);
+  }
+}
