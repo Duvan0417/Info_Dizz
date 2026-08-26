@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import PlotlyChart from './PlotlyChart';
 import ProgressBar from './ProgressBar';
 import { computeCompletion, computePremio, describeMeasure, formatMetricValue, summarizeConcurso } from '../utils/concursoMath';
+import { computeProyeccion } from '../utils/diasHabiles';
 import { CATEGORICAL, STATUS, baseLayout, statusColorFor } from '../utils/plotlyTheme';
 import { IconChart, IconCoin, IconStore, IconTarget, IconTrophy, IconUsers } from './icons';
 
@@ -107,6 +108,7 @@ export default function ConcursosOverview({
   theme,
   totalClientes = null,
   clientesSinCompra = null,
+  diasHabilesMap = null,
 }) {
   const cat = CATEGORICAL[theme] || CATEGORICAL.light;
 
@@ -121,10 +123,15 @@ export default function ConcursosOverview({
     () =>
       concursos.map((view) => ({
         view,
-        summary: summarizeConcurso(view.result, view.presupuestos || {}, premioTiers),
+        summary: summarizeConcurso(
+          view.result,
+          view.presupuestos || {},
+          premioTiers,
+          diasHabilesMap ? { fechaInicio: view.fecha_inicio, fechaFin: view.fecha_fin, mapa: diasHabilesMap } : null,
+        ),
         ...describeMeasure(view, numericFieldLabel),
       })),
-    [concursos, premioTiers, numericFieldLabel],
+    [concursos, premioTiers, numericFieldLabel, diasHabilesMap],
   );
 
   const conCumplimiento = porConcurso.filter((c) => c.summary.cumplimiento != null);
@@ -133,8 +140,21 @@ export default function ConcursosOverview({
     ? conCumplimiento.reduce((sum, c) => sum + c.summary.cumplimiento, 0) / conCumplimiento.length
     : null;
 
+  // Promedio simple de la proyeccion de cierre de cada concurso (mismo
+  // criterio que cumplimientoGlobal): a que % del presupuesto llegarian
+  // TODOS los concursos combinados si cada uno mantiene su ritmo actual de
+  // venta por dia habil hasta el final de su periodo.
+  const conProyeccion = porConcurso.filter((c) => c.summary.cumplimientoProyectado != null);
+  const proyeccionGlobal = conProyeccion.length
+    ? conProyeccion.reduce((sum, c) => sum + c.summary.cumplimientoProyectado, 0) / conProyeccion.length
+    : null;
+
   const totalPremio = porConcurso.some((c) => c.summary.totalPremio != null)
     ? porConcurso.reduce((sum, c) => sum + (c.summary.totalPremio || 0), 0)
+    : null;
+
+  const totalPremioProyectado = porConcurso.some((c) => c.summary.totalPremioProyectado != null)
+    ? porConcurso.reduce((sum, c) => sum + (c.summary.totalPremioProyectado || 0), 0)
     : null;
 
   // Agrupa por medida (label): sumar "Venta" con "Impactos" no tiene sentido,
@@ -181,17 +201,22 @@ export default function ConcursosOverview({
         const raw = viewPresupuestos[vendedor];
         const { cumplimiento } = computeCompletion(raw, valor);
         if (cumplimiento == null) continue;
+        const { cumplimientoProyectado } = diasHabilesMap
+          ? computeProyeccion({ fechaInicio: view.fecha_inicio, fechaFin: view.fecha_fin, valor, presupuesto: raw, mapa: diasHabilesMap })
+          : { cumplimientoProyectado: null };
         rows.push({
           vendedor,
           concurso: view.name,
           label: concursos.length > 1 ? `${vendedor} · ${view.name}` : vendedor,
           cumplimiento,
+          cumplimientoProyectado,
           premio: computePremio(cumplimiento, premioTiers),
+          premioProyectado: cumplimientoProyectado != null ? computePremio(cumplimientoProyectado, premioTiers) : null,
         });
       }
     }
     return rows;
-  }, [concursos, premioTiers]);
+  }, [concursos, premioTiers, diasHabilesMap]);
 
   // Cuanto se repartiria en total si CADA vendedor (en cada concurso donde
   // participa) llegara al 100% de cumplimiento. Se cuenta por vendedorRows
@@ -216,18 +241,35 @@ export default function ConcursosOverview({
     const porVendedor = new Map();
     for (const row of vendedorRows) {
       if (!porVendedor.has(row.vendedor)) {
-        porVendedor.set(row.vendedor, { vendedor: row.vendedor, cumplimientos: [], premio: 0, concursos: [] });
+        porVendedor.set(row.vendedor, {
+          vendedor: row.vendedor,
+          cumplimientos: [],
+          proyecciones: [],
+          premio: 0,
+          premioProyectado: 0,
+          anyPremioProyectado: false,
+          concursos: [],
+        });
       }
       const entry = porVendedor.get(row.vendedor);
       entry.cumplimientos.push(row.cumplimiento);
+      if (row.cumplimientoProyectado != null) entry.proyecciones.push(row.cumplimientoProyectado);
       entry.premio += row.premio || 0;
+      if (row.premioProyectado != null) {
+        entry.premioProyectado += row.premioProyectado;
+        entry.anyPremioProyectado = true;
+      }
       entry.concursos.push(row.concurso);
     }
     return Array.from(porVendedor.values())
       .map((v) => ({
         vendedor: v.vendedor,
         cumplimiento: v.cumplimientos.reduce((sum, c) => sum + c, 0) / v.cumplimientos.length,
+        cumplimientoProyectado: v.proyecciones.length
+          ? v.proyecciones.reduce((sum, c) => sum + c, 0) / v.proyecciones.length
+          : null,
         premio: v.premio,
+        premioProyectado: v.anyPremioProyectado ? v.premioProyectado : null,
         concursos: v.concursos,
       }))
       .sort((a, b) => b.cumplimiento - a.cumplimiento);
@@ -241,6 +283,8 @@ export default function ConcursosOverview({
   const showConcursoChart = conCumplimiento.length > 0;
   const showAtencionChart = enAtencion.length > 0;
   const showConcursosColumn = concursos.length > 1;
+  const showProyeccionColumn = Boolean(diasHabilesMap);
+  const showPremioProyectadoColumn = showProyeccionColumn && premioTiers.length > 0;
 
   const tiles = [
     { key: 'count', label: 'Concursos vigentes', value: concursos.length, icon: IconTrophy },
@@ -265,6 +309,17 @@ export default function ConcursosOverview({
       valueColor: statusColorFor(cumplimientoGlobal),
       icon: IconTarget,
     },
+    ...(proyeccionGlobal != null
+      ? [
+          {
+            key: 'proyeccion',
+            label: 'Proyección de cierre',
+            value: formatPercent(proyeccionGlobal),
+            valueColor: statusColorFor(proyeccionGlobal),
+            icon: IconTarget,
+          },
+        ]
+      : []),
     ...(totalClientes != null
       ? [
           {
@@ -288,6 +343,9 @@ export default function ConcursosOverview({
       : []),
     ...(totalPremio != null
       ? [{ key: 'premio', label: 'Dinero ganado a la fecha', value: formatMoney(totalPremio), icon: IconCoin }]
+      : []),
+    ...(totalPremioProyectado != null
+      ? [{ key: 'premio-proyectado', label: 'Premio proyectado al cierre', value: formatMoney(totalPremioProyectado), icon: IconCoin }]
       : []),
     ...(potencialAl100 != null
       ? [{ key: 'potencial', label: 'Si todos llegan al 100%', value: formatMoney(potencialAl100), icon: IconCoin }]
@@ -330,9 +388,19 @@ export default function ConcursosOverview({
                   <th className="sticky top-0 border-b border-border bg-surface-muted px-3 py-2 text-left font-medium text-text-h">
                     Cumplimiento
                   </th>
+                  {showProyeccionColumn && (
+                    <th className="sticky top-0 border-b border-border bg-surface-muted px-3 py-2 text-left font-medium text-text-h">
+                      Proyección
+                    </th>
+                  )}
                   <th className="sticky top-0 border-b border-border bg-surface-muted px-3 py-2 text-left font-medium text-text-h">
                     Premio
                   </th>
+                  {showPremioProyectadoColumn && (
+                    <th className="sticky top-0 border-b border-border bg-surface-muted px-3 py-2 text-left font-medium text-text-h">
+                      Premio proyectado
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -363,7 +431,20 @@ export default function ConcursosOverview({
                           <ProgressBar value={row.cumplimiento} color={color} />
                         </div>
                       </td>
+                      {showProyeccionColumn && (
+                        <td
+                          className={`border-b border-border px-3 py-2 text-left ${row.cumplimientoProyectado == null ? 'text-text' : 'font-semibold'}`}
+                          style={row.cumplimientoProyectado == null ? undefined : { color: statusColorFor(row.cumplimientoProyectado) }}
+                        >
+                          {formatPercent(row.cumplimientoProyectado)}
+                        </td>
+                      )}
                       <td className="border-b border-border px-3 py-2 text-left text-text-h">{formatMoney(row.premio)}</td>
+                      {showPremioProyectadoColumn && (
+                        <td className="border-b border-border px-3 py-2 text-left text-text-h">
+                          {formatMoney(row.premioProyectado)}
+                        </td>
+                      )}
                     </tr>
                   );
                 })}

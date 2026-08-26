@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import ThemeToggle from './ThemeToggle';
 import {
+  IconCalendar,
   IconChart,
   IconClose,
   IconDownload,
@@ -25,6 +26,7 @@ const NAV_ITEMS = [
   { to: '/concursos/guardados', label: 'Tablas guardadas', icon: IconTag, roles: ['SUPERVISOR'] },
   { to: '/clientes-sin-venta', label: 'Clientes sin venta', icon: IconStore, roles: ['VENDEDOR', 'SUPERVISOR'] },
   { to: '/admin/proveedores', label: 'Administración', icon: IconUsers, roles: ['ADMIN'] },
+  { to: '/admin/dias-habiles', label: 'Días hábiles', icon: IconCalendar, roles: ['ADMIN'] },
 ];
 
 const linkClass = ({ isActive }) =>

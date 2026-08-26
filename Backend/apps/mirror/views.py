@@ -15,8 +15,18 @@ from Backend.apps.users.permissions import HasRole, IsAdmin, IsSupervisor, IsVen
 from Backend.apps.users.scoping import apply_scoping, scoped_proveedores, scoped_vendedores
 
 from . import pivot
-from .models import MaestraCliente, PivotSavedView, PremioTier, ProductoPrecioSap, VendedorPresupuesto, VentaDetalle, Vendedor
+from .models import (
+    DiaHabil,
+    MaestraCliente,
+    PivotSavedView,
+    PremioTier,
+    ProductoPrecioSap,
+    VendedorPresupuesto,
+    VentaDetalle,
+    Vendedor,
+)
 from .serializers import (
+    DiaHabilSerializer,
     PivotSavedViewSerializer,
     PremioTierSerializer,
     VendedorPresupuestoSerializer,
@@ -520,3 +530,48 @@ class VendedoresListView(APIView):
             .values_list('vendedor', flat=True)
         )
         return Response(list(vendedores))
+
+
+class DiasHabilesView(APIView):
+    """Calendario global de dias habiles de venta (`DiaHabil`): un dia sin
+    fila se asume habil, asi que esta tabla solo guarda excepciones. Lectura
+    disponible para cualquier autenticado (lo va a necesitar cualquier
+    proyeccion que se calcule sobre este calendario); solo ADMIN puede
+    editarlo, desde Administracion."""
+
+    def get_permissions(self):
+        if self.request.method == 'PUT':
+            return [IsAdmin()]
+        return [IsAuthenticated()]
+
+    def get(self, request):
+        qs = DiaHabil.objects.all()
+        desde = request.query_params.get('desde')
+        hasta = request.query_params.get('hasta')
+        if desde:
+            qs = qs.filter(fecha__gte=parse_fecha('desde', desde))
+        if hasta:
+            qs = qs.filter(fecha__lte=parse_fecha('hasta', hasta))
+        return Response(DiaHabilSerializer(qs, many=True).data)
+
+    def put(self, request):
+        dias = request.data.get('dias')
+        if not isinstance(dias, list) or not dias:
+            raise ValidationError({'dias': 'Debe ser una lista no vacia de {"fecha", "es_habil"}.'})
+
+        parsed = []
+        for item in dias:
+            fecha_raw = item.get('fecha') if isinstance(item, dict) else None
+            if not fecha_raw:
+                raise ValidationError({'dias': 'Cada elemento necesita "fecha" (YYYY-MM-DD).'})
+            es_habil = item.get('es_habil')
+            if not isinstance(es_habil, bool):
+                raise ValidationError({'dias': 'Cada elemento necesita "es_habil" (true/false).'})
+            parsed.append((parse_fecha('fecha', fecha_raw), es_habil))
+
+        for fecha, es_habil in parsed:
+            DiaHabil.objects.update_or_create(fecha=fecha, defaults={'es_habil': es_habil, 'updated_by': request.user})
+
+        fechas = [fecha for fecha, _ in parsed]
+        qs = DiaHabil.objects.filter(fecha__in=fechas).order_by('fecha')
+        return Response(DiaHabilSerializer(qs, many=True).data)

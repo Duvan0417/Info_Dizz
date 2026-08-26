@@ -241,6 +241,26 @@ class PremioTier(models.Model):
         return f'{self.porcentaje}% -> {self.valor}'
 
 
+class DiaHabil(models.Model):
+    """Calendario global de dias habiles de venta, editado por ADMIN desde
+    Administracion. Un dia sin fila aqui se asume habil por defecto (la
+    mayoria de dias del año se vende), asi que solo hace falta guardar las
+    excepciones puntuales (festivos, dias sin ruta, etc.) en vez de marcar
+    cada dia uno por uno. Lo usa la proyeccion de cumplimiento de Concursos:
+    dias habiles transcurridos de un periodo vs. dias habiles totales."""
+
+    fecha = models.DateField(unique=True)
+    es_habil = models.BooleanField()
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+
+    class Meta:
+        ordering = ['fecha']
+
+    def __str__(self):
+        return f'{self.fecha}: {"habil" if self.es_habil else "no habil"}'
+
+
 class PivotSavedView(models.Model):
     """Tabla de pivot guardada por un SUPERVISOR en el apartado de Concursos:
     guarda tanto la configuracion (rango de fechas, filas/columnas, medida,

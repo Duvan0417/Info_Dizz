@@ -5,6 +5,7 @@ import api from '../utils/axiosConfig';
 import ConcursoCard from '../components/ConcursoCard';
 import { IconCoin, IconTarget, IconTrophy } from '../components/icons';
 import { computePremio, summarizeConcurso } from '../utils/concursoMath';
+import { buildDiasHabilesMap } from '../utils/diasHabiles';
 
 // Plotly agrega ~1.5MB gzip: separado en su propio chunk para que solo lo
 // carguen los SUPERVISOR que realmente ven concursos vigentes en el Dashboard.
@@ -115,7 +116,34 @@ export default function Dashboard() {
     return Object.fromEntries(fieldsMeta.numeric_fields.map((f) => [f.field, f.label]));
   }, [fieldsMeta]);
 
-  const concursosVigentes = savedViews.filter((v) => !v.cerrado && v.result);
+  const concursosVigentes = useMemo(() => savedViews.filter((v) => !v.cerrado && v.result), [savedViews]);
+
+  // Rango que cubre TODOS los concursos vigentes (el mas temprano a
+  // fecha_inicio, el mas tardio a fecha_fin): una sola consulta del
+  // calendario de dias habiles alcanza para proyectar el cierre de
+  // cualquiera de ellos (ver ConcursosOverview/ConcursoCard).
+  const rangoDiasHabiles = useMemo(() => {
+    const fechas = concursosVigentes.flatMap((v) => [v.fecha_inicio, v.fecha_fin]).filter(Boolean);
+    if (fechas.length === 0) return null;
+    return { desde: fechas.reduce((a, b) => (b < a ? b : a)), hasta: fechas.reduce((a, b) => (b > a ? b : a)) };
+  }, [concursosVigentes]);
+
+  const [diasHabilesMap, setDiasHabilesMap] = useState(new Map());
+
+  useEffect(() => {
+    if (!rangoDiasHabiles) {
+      setDiasHabilesMap(new Map());
+      return;
+    }
+    api
+      .get('/mirror/dias-habiles/', { params: rangoDiasHabiles })
+      .then(({ data }) => setDiasHabilesMap(buildDiasHabilesMap(data)))
+      .catch(() => setDiasHabilesMap(new Map()));
+    // Depende de los primitivos (desde/hasta), no del objeto `rangoDiasHabiles`:
+    // ese objeto es una referencia nueva en cada render aunque el rango no
+    // haya cambiado, y usarlo como dependencia dispararia un fetch infinito.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rangoDiasHabiles?.desde, rangoDiasHabiles?.hasta]);
 
   // Suma del premio ganado hasta la fecha en TODOS sus concursos vigentes
   // (el premio siempre es dinero, aunque las medidas de cada concurso sean
@@ -141,6 +169,21 @@ export default function Dashboard() {
           const { cumplimiento } = summarizeConcurso(view.result, view.presupuestos || {}, premioTiers);
           if (cumplimiento == null) return sum;
           return sum + (computePremio(100, premioTiers) || 0);
+        }, 0)
+      : null;
+
+  // Cuanto ganaria en total si su cumplimiento PROYECTADO (no el real) fuera
+  // el final en cada concurso vigente: usa el mismo calendario de dias
+  // habiles que ConcursosOverview/ConcursoCard, cargado arriba.
+  const premioProyectadoVendedor =
+    role === 'VENDEDOR' && premioTiers.length > 0
+      ? concursosVigentes.reduce((sum, view) => {
+          const { totalPremioProyectado } = summarizeConcurso(view.result, view.presupuestos || {}, premioTiers, {
+            fechaInicio: view.fecha_inicio,
+            fechaFin: view.fecha_fin,
+            mapa: diasHabilesMap,
+          });
+          return sum + (totalPremioProyectado || 0);
         }, 0)
       : null;
 
@@ -207,6 +250,7 @@ export default function Dashboard() {
                   theme={theme}
                   totalClientes={clientesStats?.total_clientes ?? null}
                   clientesSinCompra={clientesStats ? clientesStats.clientes.length : null}
+                  diasHabilesMap={diasHabilesMap}
                 />
               </Suspense>
               <h3 className="m-0 mb-3 flex items-center gap-1.5 text-sm font-semibold tracking-wide text-text uppercase">
@@ -222,6 +266,7 @@ export default function Dashboard() {
                       premioTiers={premioTiers}
                       numericFieldLabel={numericFieldLabel}
                       rowsFieldLabels={view.result.rows_fields.map((f) => dimensionLabel[f] || f)}
+                      diasHabilesMap={diasHabilesMap}
                     />
                   </div>
                 ))}
@@ -246,7 +291,7 @@ export default function Dashboard() {
           ) : (
             <>
               {totalPremioVendedor != null && (
-                <div className="animate-fade-in-up mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="animate-fade-in-up mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   <div className="rounded-xl border border-border bg-gradient-to-br from-accent-soft via-surface to-surface p-5 shadow-soft">
                     <div className="flex items-center gap-2">
                       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-accent-soft text-accent-500">
@@ -279,6 +324,22 @@ export default function Dashboard() {
                       </p>
                     </div>
                   )}
+                  {premioProyectadoVendedor != null && (
+                    <div className="rounded-xl border border-border bg-surface p-5 shadow-soft">
+                      <div className="flex items-center gap-2">
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-accent-soft text-accent-500">
+                          <IconCoin className="h-4 w-4" />
+                        </span>
+                        <p className="m-0 text-xs font-medium tracking-wide text-text uppercase">Premio proyectado</p>
+                      </div>
+                      <p className="m-0 mt-2 text-3xl font-semibold text-text-h">
+                        ${premioProyectadoVendedor.toLocaleString('es-CO', { maximumFractionDigits: 0 })}
+                      </p>
+                      <p className="m-0 mt-1 text-xs text-text">
+                        Lo que ganarías si mantienes tu ritmo de venta actual hasta el cierre.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
               <div className="flex flex-col gap-3">
@@ -290,6 +351,7 @@ export default function Dashboard() {
                       premioTiers={premioTiers}
                       numericFieldLabel={{}}
                       rowsFieldLabels={view.result.rows_fields.map((f) => dimensionLabel[f] || f)}
+                      diasHabilesMap={diasHabilesMap}
                     />
                   </div>
                 ))}

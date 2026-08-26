@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import api from '../utils/axiosConfig';
 import PivotResultTable from '../components/PivotResultTable';
 import PageHeader from '../components/PageHeader';
+import { buildDiasHabilesMap } from '../utils/diasHabiles';
 
 const OPERATOR_LABELS = {
   eq: 'Igual a',
@@ -99,6 +100,8 @@ export default function Concursos() {
   const [presupuestos, setPresupuestos] = useState({});
   const [globalPresupuestos, setGlobalPresupuestos] = useState({});
 
+  const [diasHabilesMap, setDiasHabilesMap] = useState(null);
+
   const [premioTiers, setPremioTiers] = useState([]);
   const [newTierPorcentaje, setNewTierPorcentaje] = useState('');
   const [newTierValor, setNewTierValor] = useState('');
@@ -162,6 +165,20 @@ export default function Concursos() {
       .catch(() => setProveedores([]));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Calendario de dias habiles para el rango elegido (seccion 1): alimenta
+  // la columna "Proyección" de la tabla de resultado (ver PivotResultTable).
+  // Sin fechaDesde/fechaHasta no hay nada que consultar.
+  useEffect(() => {
+    if (!fechaDesde || !fechaHasta) {
+      setDiasHabilesMap(null);
+      return;
+    }
+    api
+      .get('/mirror/dias-habiles/', { params: { desde: fechaDesde, hasta: fechaHasta } })
+      .then(({ data }) => setDiasHabilesMap(buildDiasHabilesMap(data)))
+      .catch(() => setDiasHabilesMap(null));
+  }, [fechaDesde, fechaHasta]);
 
   // Los productos que puede elegir "Productos que participan" dependen del
   // proveedor filtrado (seccion 3): sin proveedor, todos los que el
@@ -999,6 +1016,9 @@ export default function Concursos() {
             onPresupuestoChange={handlePresupuestoInput}
             onPresupuestoSave={handlePresupuestoSave}
             premioTiers={premioTiers}
+            fechaInicio={fechaDesde}
+            fechaFin={fechaHasta}
+            diasHabilesMap={diasHabilesMap}
           />
         </div>
       )}

@@ -1,5 +1,7 @@
 import { Fragment } from 'react';
 import { computeCompletion, computePremio } from '../utils/concursoMath';
+import { computeProyeccion } from '../utils/diasHabiles';
+import { statusColorFor } from '../utils/plotlyTheme';
 
 const thClass = 'sticky top-0 border-b border-border bg-surface-muted px-3 py-2 text-left font-medium text-text-h';
 const tdClass = 'border-b border-border px-3 py-2 text-left';
@@ -28,7 +30,16 @@ function formatMoney(value) {
  * si `budgetEditable=false`, para vistas como el Dashboard) y agrega al final
  * "% Cumplimiento" (valor / presupuesto), "Faltante" (presupuesto - valor) y,
  * si hay `premioTiers`, "Premio" (cuanto gana el vendedor segun el tramo
- * alcanzado); si no, se omiten. */
+ * alcanzado); si no, se omiten.
+ *
+ * Con `fechaInicio`/`fechaFin` y `diasHabilesMap` (calendario global de dias
+ * habiles, ver utils/diasHabiles.js) tambien agrega "Proyección": a que %
+ * del presupuesto llegaria cada vendedor si mantiene su ritmo de venta hasta
+ * hoy durante el resto de dias habiles del periodo. Sin esos tres datos, la
+ * columna simplemente no aparece. Con eso Y `premioTiers`, agrega ademas
+ * "Premio proyectado": el premio que ganaria segun ESE cumplimiento
+ * proyectado (no el real) — un tramo distinto de "Premio", no se suman entre
+ * si. */
 export default function PivotResultTable({
   result,
   measure,
@@ -39,9 +50,14 @@ export default function PivotResultTable({
   onPresupuestoSave,
   premioTiers = [],
   budgetEditable = true,
+  fechaInicio,
+  fechaFin,
+  diasHabilesMap,
 }) {
   const vendedorIndex = showBudget ? result.rows_fields.indexOf('vendedor_nombre') : -1;
   const showPremio = vendedorIndex >= 0 && premioTiers.length > 0;
+  const showProyeccion = vendedorIndex >= 0 && Boolean(fechaInicio) && Boolean(fechaFin) && Boolean(diasHabilesMap);
+  const showPremioProyectado = showPremio && showProyeccion;
 
   const budgetTotalPresupuesto =
     vendedorIndex >= 0
@@ -56,6 +72,29 @@ export default function PivotResultTable({
     ? result.data.reduce((sum, entry) => {
         const { cumplimiento } = computeCompletion(presupuestos[entry.row[vendedorIndex]], entry.total || 0);
         return sum + (computePremio(cumplimiento, premioTiers) || 0);
+      }, 0)
+    : null;
+
+  const proyeccionGrandTotal = showProyeccion
+    ? computeProyeccion({
+        fechaInicio,
+        fechaFin,
+        valor: result.grand_total || 0,
+        presupuesto: budgetTotalPresupuesto || null,
+        mapa: diasHabilesMap,
+      })
+    : null;
+
+  const premioProyectadoGrandTotal = showPremioProyectado
+    ? result.data.reduce((sum, entry) => {
+        const { cumplimientoProyectado } = computeProyeccion({
+          fechaInicio,
+          fechaFin,
+          valor: entry.total || 0,
+          presupuesto: presupuestos[entry.row[vendedorIndex]],
+          mapa: diasHabilesMap,
+        });
+        return sum + (computePremio(cumplimientoProyectado, premioTiers) || 0);
       }, 0)
     : null;
 
@@ -86,7 +125,9 @@ export default function PivotResultTable({
                 <th className={`${thClass} text-text`}>Faltante</th>
               </>
             )}
+            {showProyeccion && <th className={`${thClass} text-text`}>Proyección</th>}
             {showPremio && <th className={`${thClass} text-text`}>Premio</th>}
+            {showPremioProyectado && <th className={`${thClass} text-text`}>Premio proyectado</th>}
           </tr>
         </thead>
         <tbody>
@@ -134,10 +175,17 @@ export default function PivotResultTable({
                 </td>
                 {(vendedorIndex >= 0 || showPremio) &&
                   (() => {
-                    const { cumplimiento, faltante } = computeCompletion(
-                      presupuestos[entry.row[vendedorIndex]],
-                      entry.total || 0,
-                    );
+                    const presupuestoVendedor = presupuestos[entry.row[vendedorIndex]];
+                    const { cumplimiento, faltante } = computeCompletion(presupuestoVendedor, entry.total || 0);
+                    const proyeccion = showProyeccion
+                      ? computeProyeccion({
+                          fechaInicio,
+                          fechaFin,
+                          valor: entry.total || 0,
+                          presupuesto: presupuestoVendedor,
+                          mapa: diasHabilesMap,
+                        })
+                      : null;
                     return (
                       <>
                         {vendedorIndex >= 0 && (
@@ -146,7 +194,23 @@ export default function PivotResultTable({
                             <td className={tdClass}>{faltante == null ? '—' : formatValue(faltante, measure)}</td>
                           </>
                         )}
+                        {showProyeccion && (
+                          <td className={tdClass}>
+                            {proyeccion.cumplimientoProyectado == null ? (
+                              '—'
+                            ) : (
+                              <span style={{ color: statusColorFor(proyeccion.cumplimientoProyectado) }}>
+                                {formatPercent(proyeccion.cumplimientoProyectado)}
+                              </span>
+                            )}
+                          </td>
+                        )}
                         {showPremio && <td className={tdClass}>{formatMoney(computePremio(cumplimiento, premioTiers))}</td>}
+                        {showPremioProyectado && (
+                          <td className={tdClass}>
+                            {formatMoney(computePremio(proyeccion.cumplimientoProyectado, premioTiers))}
+                          </td>
+                        )}
                       </>
                     );
                   })()}
@@ -179,8 +243,22 @@ export default function PivotResultTable({
                   </td>
                 </>
               )}
+              {showProyeccion && (
+                <td className={`${tdClass} font-medium text-text-h`}>
+                  {proyeccionGrandTotal.cumplimientoProyectado == null ? (
+                    '—'
+                  ) : (
+                    <span style={{ color: statusColorFor(proyeccionGrandTotal.cumplimientoProyectado) }}>
+                      {formatPercent(proyeccionGrandTotal.cumplimientoProyectado)}
+                    </span>
+                  )}
+                </td>
+              )}
               {showPremio && (
                 <td className={`${tdClass} font-medium text-text-h`}>{formatMoney(premioGrandTotal)}</td>
+              )}
+              {showPremioProyectado && (
+                <td className={`${tdClass} font-medium text-text-h`}>{formatMoney(premioProyectadoGrandTotal)}</td>
               )}
             </tr>
           </tfoot>

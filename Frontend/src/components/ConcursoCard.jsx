@@ -21,12 +21,18 @@ function formatPercent(value) {
  * consolidada de todos los concursos vive en ConcursosOverview, arriba de
  * esta lista): punto de estado, totales en una linea y la tabla detallada
  * por vendedor colapsada por defecto. */
-export default function ConcursoCard({ view, presupuestos, premioTiers, numericFieldLabel, rowsFieldLabels }) {
+export default function ConcursoCard({ view, presupuestos, premioTiers, numericFieldLabel, rowsFieldLabels, diasHabilesMap }) {
   const [expanded, setExpanded] = useState(false);
 
   const summary = useMemo(
-    () => summarizeConcurso(view.result, presupuestos, premioTiers),
-    [view.result, presupuestos, premioTiers],
+    () =>
+      summarizeConcurso(
+        view.result,
+        presupuestos,
+        premioTiers,
+        diasHabilesMap ? { fechaInicio: view.fecha_inicio, fechaFin: view.fecha_fin, mapa: diasHabilesMap } : null,
+      ),
+    [view.result, view.fecha_inicio, view.fecha_fin, presupuestos, premioTiers, diasHabilesMap],
   );
   const { isMonetary, label: valorLabel } = describeMeasure(view, numericFieldLabel);
 
@@ -76,10 +82,24 @@ export default function ConcursoCard({ view, presupuestos, premioTiers, numericF
               )}
             </div>
           </div>
+          {summary.cumplimientoProyectado != null && (
+            <div>
+              <p className="m-0 text-[10px] font-medium tracking-wide text-text/70 uppercase">Proyección de cierre</p>
+              <p className="m-0 text-sm font-semibold" style={{ color: statusColorFor(summary.cumplimientoProyectado) }}>
+                {formatPercent(summary.cumplimientoProyectado)}
+              </p>
+            </div>
+          )}
           {summary.totalPremio != null && (
             <div>
               <p className="m-0 text-[10px] font-medium tracking-wide text-text/70 uppercase">Premio</p>
               <p className="m-0 text-sm font-semibold text-text-h">{formatMoney(summary.totalPremio)}</p>
+            </div>
+          )}
+          {summary.totalPremioProyectado != null && (
+            <div>
+              <p className="m-0 text-[10px] font-medium tracking-wide text-text/70 uppercase">Premio proyectado</p>
+              <p className="m-0 text-sm font-semibold text-text-h">{formatMoney(summary.totalPremioProyectado)}</p>
             </div>
           )}
           <button type="button" onClick={() => setExpanded((v) => !v)} className={`${buttonSmallClass} ml-auto`}>
@@ -98,6 +118,9 @@ export default function ConcursoCard({ view, presupuestos, premioTiers, numericF
             presupuestos={presupuestos}
             premioTiers={premioTiers}
             budgetEditable={false}
+            fechaInicio={view.fecha_inicio}
+            fechaFin={view.fecha_fin}
+            diasHabilesMap={diasHabilesMap}
           />
         </div>
       )}

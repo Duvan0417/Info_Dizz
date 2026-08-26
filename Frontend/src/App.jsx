@@ -8,6 +8,7 @@ import AdminClosings from './pages/AdminClosings';
 import ProviderExports from './pages/ProviderExports';
 import VentasDetalle from './pages/VentasDetalle';
 import AdminProveedores from './pages/AdminProveedores';
+import DiasHabiles from './pages/DiasHabiles';
 import Concursos from './pages/Concursos';
 import ConcursosGuardados from './pages/ConcursosGuardados';
 import ClientesSinVenta from './pages/ClientesSinVenta';
@@ -88,6 +89,14 @@ function AppShell() {
             element={
               <ProtectedRoute allowedRoles={['SUPERVISOR']}>
                 <ConcursosGuardados />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/dias-habiles"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN']}>
+                <DiasHabiles />
               </ProtectedRoute>
             }
           />

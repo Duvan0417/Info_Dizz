@@ -129,6 +129,17 @@ export function IconTag(props) {
   );
 }
 
+export function IconCalendar(props) {
+  return (
+    <Icon {...props}>
+      <rect x="3.5" y="5" width="17" height="15" rx="2" />
+      <path d="M3.5 9.5h17" />
+      <path d="M8 3v4" />
+      <path d="M16 3v4" />
+    </Icon>
+  );
+}
+
 export function IconChevronDown(props) {
   return (
     <Icon {...props}>

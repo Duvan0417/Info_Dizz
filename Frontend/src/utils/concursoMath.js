@@ -1,3 +1,5 @@
+import { computeProyeccion } from './diasHabiles';
+
 /** Calculos compartidos de un concurso (Dashboard, PivotResultTable): a
  * partir del presupuesto (string editable, puede venir vacio) y el valor
  * vendido, el % de cumplimiento y cuanto falta para llegar al presupuesto.
@@ -50,16 +52,42 @@ export function formatMetricValue(value, isMonetary) {
  * venta y presupuesto totales, % de cumplimiento global y premio total
  * repartido entre los vendedores visibles. `null` en `cumplimiento` cuando
  * el pivot no tiene `vendedor_nombre` en las filas o nadie tiene presupuesto
- * cargado todavia. */
-export function summarizeConcurso(result, presupuestos, premioTiers) {
+ * cargado todavia.
+ *
+ * `diasHabilesCtx` (opcional) es `{ fechaInicio, fechaFin, mapa }` — el
+ * calendario global de dias habiles (ver utils/diasHabiles.js) y el rango
+ * del concurso (normalmente `view.fecha_inicio`/`view.fecha_fin`). Sin esto,
+ * `valorProyectado`/`cumplimientoProyectado`/`totalPremioProyectado` quedan
+ * en null: proyectar el cierre del concurso a partir del ritmo de venta
+ * actual es opcional y solo tiene sentido con el calendario cargado.
+ *
+ * `totalPremio` es el premio YA GANADO segun el cumplimiento real de cada
+ * vendedor hasta hoy; `totalPremioProyectado` es un valor aparte: cuanto
+ * ganaria cada vendedor si su cumplimiento PROYECTADO (no el real) fuera el
+ * final — son dos tramos distintos del mismo `premioTiers`, no se combinan
+ * entre si, cada uno representa una pregunta distinta ("cuanto llevo
+ * ganado" vs. "cuanto ganaria si sigo a este ritmo"). */
+export function summarizeConcurso(result, presupuestos, premioTiers, diasHabilesCtx = null) {
   const vendedorIndex = result.rows_fields.indexOf('vendedor_nombre');
   if (vendedorIndex < 0) {
-    return { vendedorIndex, totalVenta: result.grand_total || 0, totalPresupuesto: null, cumplimiento: null, totalPremio: null };
+    const totalVenta = result.grand_total || 0;
+    const proyeccion = diasHabilesCtx ? computeProyeccion({ ...diasHabilesCtx, valor: totalVenta, presupuesto: null }) : null;
+    return {
+      vendedorIndex,
+      totalVenta,
+      totalPresupuesto: null,
+      cumplimiento: null,
+      totalPremio: null,
+      totalPremioProyectado: null,
+      valorProyectado: proyeccion?.valorProyectado ?? null,
+      cumplimientoProyectado: null,
+    };
   }
 
   let totalVenta = 0;
   let totalPresupuesto = 0;
   let totalPremio = 0;
+  let totalPremioProyectado = 0;
   let anyPresupuesto = false;
 
   for (const entry of result.data) {
@@ -73,14 +101,28 @@ export function summarizeConcurso(result, presupuestos, premioTiers) {
     }
     const premio = computePremio(cumplimiento, premioTiers);
     if (premio != null) totalPremio += premio;
+
+    if (diasHabilesCtx) {
+      const { cumplimientoProyectado } = computeProyeccion({ ...diasHabilesCtx, valor, presupuesto: raw });
+      const premioProyectado = computePremio(cumplimientoProyectado, premioTiers);
+      if (premioProyectado != null) totalPremioProyectado += premioProyectado;
+    }
   }
 
   const cumplimiento = anyPresupuesto ? (totalVenta / totalPresupuesto) * 100 : null;
+
+  const proyeccion = diasHabilesCtx
+    ? computeProyeccion({ ...diasHabilesCtx, valor: totalVenta, presupuesto: anyPresupuesto ? totalPresupuesto : null })
+    : null;
+
   return {
     vendedorIndex,
     totalVenta,
     totalPresupuesto: anyPresupuesto ? totalPresupuesto : null,
     cumplimiento,
     totalPremio: premioTiers.length > 0 ? totalPremio : null,
+    totalPremioProyectado: diasHabilesCtx && premioTiers.length > 0 ? totalPremioProyectado : null,
+    valorProyectado: proyeccion?.valorProyectado ?? null,
+    cumplimientoProyectado: proyeccion?.cumplimientoProyectado ?? null,
   };
 }

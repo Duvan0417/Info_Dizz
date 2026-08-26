@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from .views import (
     ClientesSinVentaView,
+    DiasHabilesView,
     PivotFieldValuesView,
     PivotMetadataView,
     PivotSavedViewSet,
@@ -37,4 +38,5 @@ urlpatterns = [
         name='ventas-detalle-pivot-vistas-vendedor',
     ),
     path('clientes-sin-venta/', ClientesSinVentaView.as_view(), name='clientes-sin-venta'),
+    path('dias-habiles/', DiasHabilesView.as_view(), name='dias-habiles'),
 ] + router.urls
