@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import PivotSavedView, VendedorPresupuesto, VentaDetalle
+from .models import PivotSavedView, PremioTier, VendedorPresupuesto, VentaDetalle
 
 
 class VentaDetalleSerializer(serializers.ModelSerializer):
@@ -15,7 +15,25 @@ class VendedorPresupuestoSerializer(serializers.ModelSerializer):
         fields = ['vendedor', 'monto', 'updated_at']
 
 
+class PremioTierSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PremioTier
+        fields = ['id', 'porcentaje', 'valor', 'updated_at']
+
+
 class PivotSavedViewSerializer(serializers.ModelSerializer):
     class Meta:
         model = PivotSavedView
-        fields = ['id', 'name', 'config', 'result', 'created_at', 'updated_at']
+        fields = [
+            'id',
+            'name',
+            'config',
+            'result',
+            'presupuestos',
+            'fecha_inicio',
+            'fecha_fin',
+            'cerrado',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['fecha_inicio', 'fecha_fin', 'cerrado']

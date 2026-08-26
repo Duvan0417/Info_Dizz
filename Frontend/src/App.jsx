@@ -1,7 +1,7 @@
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { useAuth } from './context/useAuth';
-import ThemeToggle from './components/ThemeToggle';
+import Sidebar from './components/Sidebar';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import AdminClosings from './pages/AdminClosings';
@@ -10,6 +10,7 @@ import VentasDetalle from './pages/VentasDetalle';
 import AdminProveedores from './pages/AdminProveedores';
 import Concursos from './pages/Concursos';
 import ConcursosGuardados from './pages/ConcursosGuardados';
+import ClientesSinVenta from './pages/ClientesSinVenta';
 
 function ProtectedRoute({ allowedRoles, children }) {
   const { isAuthenticated, role, loading } = useAuth();
@@ -21,17 +22,17 @@ function ProtectedRoute({ allowedRoles, children }) {
   return children;
 }
 
-function ChromeThemeToggle() {
-  const location = useLocation();
-  if (location.pathname === '/login') return null;
-  return <ThemeToggle className="absolute top-4 right-4 z-10" />;
-}
+// SUPERVISOR y ADMIN navegan con la paleta rojo/negro/blanco (.theme-noir,
+// definida en index.css); el resto de roles conserva el tema por defecto. El
+// login la usa siempre (ver Login.jsx: aun no se conoce el rol al mostrarla).
+function AppShell() {
+  const { role, isAuthenticated } = useAuth();
+  const themed = role === 'SUPERVISOR' || role === 'ADMIN';
 
-function App() {
   return (
-    <AuthProvider>
-      <div className="relative flex min-h-svh w-full flex-1 flex-col">
-        <ChromeThemeToggle />
+    <div className={`flex min-h-svh w-full flex-1 flex-col md:flex-row ${themed ? 'theme-noir' : ''}`}>
+      {isAuthenticated && <Sidebar />}
+      <div className="flex min-h-svh min-w-0 flex-1 flex-col">
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route
@@ -61,7 +62,7 @@ function App() {
           <Route
             path="/ventas"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['PROVEEDOR', 'SUPERVISOR', 'DIRECTOR', 'ADMIN']}>
                 <VentasDetalle />
               </ProtectedRoute>
             }
@@ -90,9 +91,25 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/clientes-sin-venta"
+            element={
+              <ProtectedRoute allowedRoles={['VENDEDOR', 'SUPERVISOR']}>
+                <ClientesSinVenta />
+              </ProtectedRoute>
+            }
+          />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </div>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppShell />
     </AuthProvider>
   );
 }

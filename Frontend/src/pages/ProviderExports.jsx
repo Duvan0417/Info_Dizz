@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import api from '../utils/axiosConfig';
+import PageHeader from '../components/PageHeader';
+import { IconDownload } from '../components/icons';
 
 export default function ProviderExports() {
   const [pending, setPending] = useState(null);
@@ -42,8 +44,8 @@ export default function ProviderExports() {
     'w-[130px] rounded-md border border-border bg-surface px-2 py-1 text-[13px] text-text-h focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-2';
 
   return (
-    <div className="w-full flex-1 px-6 py-8 text-left">
-      <h1 className="mb-6 text-2xl font-medium tracking-tight text-text-h sm:text-3xl">Exportar planos</h1>
+    <div className="w-full flex-1 px-6 py-8 text-left sm:px-8">
+      <PageHeader title="Exportar planos" subtitle="Descarga inventario, ventas y precios en CSV o Excel." />
 
       {error && (
         <p role="alert" className="m-0 mb-3 text-sm text-danger">
@@ -52,7 +54,10 @@ export default function ProviderExports() {
       )}
 
       <ul className="m-0 flex max-w-lg list-none flex-col gap-3 p-0">
-        <li className="flex flex-wrap items-center gap-3 rounded-lg border border-border p-4">
+        <li className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-surface p-4 shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-lg">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent-500">
+            <IconDownload className="h-4 w-4" />
+          </span>
           <span className="mr-auto font-medium text-text-h">Inventario</span>
           <button
             type="button"
@@ -72,7 +77,10 @@ export default function ProviderExports() {
           </button>
         </li>
 
-        <li className="flex flex-wrap items-center gap-3 rounded-lg border border-border p-4">
+        <li className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-surface p-4 shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-lg">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent-500">
+            <IconDownload className="h-4 w-4" />
+          </span>
           <span className="mr-auto font-medium text-text-h">Ventas</span>
           <label className="flex flex-row items-center gap-1.5 text-[13px] text-text-h">
             Desde *
@@ -114,7 +122,10 @@ export default function ProviderExports() {
           </button>
         </li>
 
-        <li className="flex flex-wrap items-center gap-3 rounded-lg border border-border p-4">
+        <li className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-surface p-4 shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-lg">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent-500">
+            <IconDownload className="h-4 w-4" />
+          </span>
           <span className="mr-auto font-medium text-text-h">Precios</span>
           <button
             type="button"

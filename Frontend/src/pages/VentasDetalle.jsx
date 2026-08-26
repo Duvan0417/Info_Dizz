@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import api from '../utils/axiosConfig';
+import PageHeader from '../components/PageHeader';
 
 const formatMoney = (value) =>
   value == null ? '' : Number(value).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -65,18 +65,14 @@ export default function VentasDetalle() {
   const totalGeneral = rows.reduce((sum, row) => sum + Number(row.total_venta || 0), 0);
 
   return (
-    <div className="w-full flex-1 px-6 py-8 text-left">
-      <header className="mb-2 flex flex-wrap items-baseline justify-between gap-3 pr-14">
-        <h1 className="m-0 text-2xl font-medium tracking-tight text-text-h sm:text-3xl">
-          Venta neta por vendedor (base espejo)
-        </h1>
-        <Link to="/dashboard" className="text-sm text-accent-500 hover:underline">
-          Volver
-        </Link>
-      </header>
+    <div className="w-full flex-1 px-6 py-8 text-left sm:px-8">
+      <PageHeader
+        title="Venta neta por vendedor"
+        subtitle="Base espejo (venta_detalle): venta neta agregada por vendedor para el rango de fechas seleccionado."
+      />
 
       <form
-        className="mb-4 flex flex-row flex-wrap items-end gap-3"
+        className="mb-5 flex flex-row flex-wrap items-end gap-3 rounded-lg border border-border bg-surface-muted px-4 py-3.5"
         onSubmit={handleFilterSubmit}
       >
         <label className="flex flex-col items-start gap-1.5 text-xs text-text-h">
@@ -135,24 +131,32 @@ export default function VentasDetalle() {
         <p className="mb-3 text-sm text-text">Selecciona el rango de fechas (obligatorio) y presiona Filtrar para consultar.</p>
       ) : (
         <>
-          <p className="mb-3 text-sm text-text">
-            {rows.length.toLocaleString('es-CO')} vendedores &middot; venta neta acumulada: {formatMoney(totalGeneral)}
-          </p>
+          <div className="mb-5 flex flex-wrap items-center gap-4 rounded-lg border border-border bg-surface-muted px-5 py-4">
+            <div>
+              <p className="m-0 text-xs tracking-wide text-text uppercase">Vendedores</p>
+              <p className="m-0 mt-0.5 text-xl font-semibold text-text-h">{rows.length.toLocaleString('es-CO')}</p>
+            </div>
+            <div className="h-8 w-px bg-border" />
+            <div>
+              <p className="m-0 text-xs tracking-wide text-text uppercase">Venta neta acumulada</p>
+              <p className="m-0 mt-0.5 text-xl font-semibold text-accent-500">{formatMoney(totalGeneral)}</p>
+            </div>
+          </div>
 
-          <div className="w-full overflow-x-auto rounded-lg border border-border">
+          <div className="w-full overflow-x-auto rounded-lg border border-border shadow-soft">
             <table className="w-full border-collapse text-sm whitespace-nowrap">
               <thead>
                 <tr>
-                  <th className="sticky top-0 border-b border-border bg-surface-muted px-3 py-2 text-left font-medium text-text-h">
+                  <th className="sticky top-0 border-b border-border bg-surface-muted px-3 py-2.5 text-left font-medium text-text-h">
                     Vendedor
                   </th>
-                  <th className="sticky top-0 border-b border-border bg-surface-muted px-3 py-2 text-left font-medium text-text-h">
+                  <th className="sticky top-0 border-b border-border bg-surface-muted px-3 py-2.5 text-left font-medium text-text-h">
                     Cantidad neta
                   </th>
-                  <th className="sticky top-0 border-b border-border bg-surface-muted px-3 py-2 text-left font-medium text-text-h">
+                  <th className="sticky top-0 border-b border-border bg-surface-muted px-3 py-2.5 text-left font-medium text-text-h">
                     Venta neta
                   </th>
-                  <th className="sticky top-0 border-b border-border bg-surface-muted px-3 py-2 text-left font-medium text-text-h">
+                  <th className="sticky top-0 border-b border-border bg-surface-muted px-3 py-2.5 text-left font-medium text-text-h">
                     Líneas
                   </th>
                 </tr>
@@ -160,20 +164,22 @@ export default function VentasDetalle() {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={4} className="border-b border-border px-3 py-2 text-left">
+                    <td colSpan={4} className="border-b border-border px-3 py-2 text-left text-text">
                       Cargando...
                     </td>
                   </tr>
                 ) : rows.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="border-b border-border px-3 py-2 text-left">
+                    <td colSpan={4} className="border-b border-border px-3 py-2 text-left text-text">
                       Sin resultados.
                     </td>
                   </tr>
                 ) : (
                   rows.map((row) => (
-                    <tr key={row.vendedor_nombre} className="hover:bg-accent-soft">
-                      <td className="border-b border-border px-3 py-2 text-left">{row.vendedor_nombre}</td>
+                    <tr key={row.vendedor_nombre} className="transition-colors hover:bg-accent-soft">
+                      <td className="border-b border-border px-3 py-2 text-left font-medium text-text-h">
+                        {row.vendedor_nombre}
+                      </td>
                       <td className="border-b border-border px-3 py-2 text-left">{formatNumber(row.total_cantidad)}</td>
                       <td className="border-b border-border px-3 py-2 text-left">{formatMoney(row.total_venta)}</td>
                       <td className="border-b border-border px-3 py-2 text-left">{formatNumber(row.num_lineas)}</td>

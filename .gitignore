@@ -5,3 +5,5 @@ db.sqlite3
 /Backend/media/*
 !/Backend/media/.gitkeep
 /Frontend/node_modules/
+/venv/
+/Backend/venv/

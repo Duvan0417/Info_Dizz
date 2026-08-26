@@ -10,6 +10,7 @@ class User(AbstractUser):
         SUPERVISOR = 'SUPERVISOR', 'Supervisor'
         DIRECTOR = 'DIRECTOR', 'Director'
         ADMIN = 'ADMIN', 'Administrador'
+        VENDEDOR = 'VENDEDOR', 'Vendedor'
 
     role = models.CharField(max_length=20, choices=Role.choices, default=Role.PROVEEDOR)
 
@@ -39,10 +40,12 @@ class ProveedorAccess(models.Model):
 
 class VendedorAccess(models.Model):
     """Vendedores (columna `vendedor_nombre` del mirror) que un SUPERVISOR
-    supervisa. Se combina con ProveedorAccess con AND: un SUPERVISOR solo ve
-    ventas que sean a la vez de sus proveedores asignados Y de sus vendedores
-    asignados. Sin ninguno asignado aqui, no ve nada por esta dimension
-    (mismo criterio que ProveedorAccess). Solo aplica a SUPERVISOR.
+    supervisa, o el vendedor (exactamente 1) que un usuario VENDEDOR
+    representa. Para SUPERVISOR se combina con ProveedorAccess con AND: solo
+    ve ventas que sean a la vez de sus proveedores asignados Y de sus
+    vendedores asignados. Sin ninguno asignado aqui, no ve nada por esta
+    dimension (mismo criterio que ProveedorAccess). Solo aplica a SUPERVISOR
+    y VENDEDOR.
     """
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='vendedor_access')

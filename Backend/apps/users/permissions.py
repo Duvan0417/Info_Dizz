@@ -19,6 +19,12 @@ class IsDirector(BasePermission):
         return bool(user and user.is_authenticated and user.role == user.Role.DIRECTOR)
 
 
+class IsVendedor(BasePermission):
+    def has_permission(self, request, view):
+        user = request.user
+        return bool(user and user.is_authenticated and user.role == user.Role.VENDEDOR)
+
+
 class IsAdmin(BasePermission):
     """Rol de administracion del sistema (crear usuarios, asignar proveedores).
     Independiente de la jerarquia de negocio (Proveedor/Supervisor/Director)."""

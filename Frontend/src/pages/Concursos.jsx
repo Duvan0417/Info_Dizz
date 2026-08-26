@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import api from '../utils/axiosConfig';
 import PivotResultTable from '../components/PivotResultTable';
+import PageHeader from '../components/PageHeader';
 
 const OPERATOR_LABELS = {
   eq: 'Igual a',
@@ -17,9 +18,9 @@ const inputClass =
   'w-full box-border rounded-md border border-border bg-surface px-3 py-2 text-sm text-text-h focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-2';
 const labelClass = 'flex flex-col items-start gap-1.5 text-xs text-text-h';
 const buttonPrimaryClass =
-  'inline-flex items-center justify-center rounded-md border-2 border-transparent bg-accent-soft px-4.5 py-2 text-[15px] font-medium text-accent-500 transition-colors hover:not-disabled:border-accent-border disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-2';
+  'inline-flex items-center justify-center rounded-md border-2 border-transparent bg-accent-soft px-4.5 py-2 text-[15px] font-medium text-accent-500 transition-all hover:not-disabled:border-accent-border hover:not-disabled:-translate-y-0.5 active:not-disabled:scale-95 disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-2';
 const buttonSmallClass =
-  'inline-flex items-center justify-center rounded-md border border-border bg-transparent px-2.5 py-1 text-xs font-medium text-text-h transition-colors hover:not-disabled:border-accent-border hover:not-disabled:text-accent-500 disabled:cursor-not-allowed disabled:opacity-50';
+  'inline-flex items-center justify-center rounded-md border border-border bg-transparent px-2.5 py-1 text-xs font-medium text-text-h transition-all hover:not-disabled:border-accent-border hover:not-disabled:text-accent-500 active:not-disabled:scale-95 disabled:cursor-not-allowed disabled:opacity-50';
 let nextConditionId = 1;
 
 function formatValue(value, measure) {
@@ -29,12 +30,44 @@ function formatValue(value, measure) {
   return Number(value).toLocaleString('es-CO', options);
 }
 
+function toDateInputValue(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+/** Primer y ultimo dia del mes actual, para que un concurso nuevo nazca con
+ * ese rango por defecto (la mayoria dura un mes; el supervisor puede
+ * desbloquear las fechas para seguimientos mas largos, hasta 3 meses). */
+function currentMonthBounds() {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  return { start: toDateInputValue(start), end: toDateInputValue(end) };
+}
+
+const MAX_RANGE_DAYS = 93; // ~3 meses
+
+function SectionBadge({ n }) {
+  return (
+    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-soft text-sm font-semibold text-accent-500">
+      {n}
+    </span>
+  );
+}
+
+function FieldGroupLabel({ children }) {
+  return <p className="m-0 mb-2 text-[11px] font-semibold tracking-wide text-text uppercase">{children}</p>;
+}
+
 export default function Concursos() {
   const [fieldsMeta, setFieldsMeta] = useState(null);
   const [metaError, setMetaError] = useState('');
 
-  const [fechaDesde, setFechaDesde] = useState('');
-  const [fechaHasta, setFechaHasta] = useState('');
+  const [fechaDesde, setFechaDesde] = useState(() => currentMonthBounds().start);
+  const [fechaHasta, setFechaHasta] = useState(() => currentMonthBounds().end);
+  const [datesLocked, setDatesLocked] = useState(true);
   const [rowField1, setRowField1] = useState('');
   const [rowField2, setRowField2] = useState('');
   const [columnField, setColumnField] = useState('');
@@ -47,11 +80,29 @@ export default function Concursos() {
   const [productSearch, setProductSearch] = useState('');
   const [selectedProducts, setSelectedProducts] = useState([]);
 
+  // Proveedores que puede ver este SUPERVISOR (ver Backend.apps.mirror.views.
+  // ProveedoresListView / scoped_proveedores): ya viene acotado por el
+  // backend, no hay que filtrar nada aca.
+  const [proveedores, setProveedores] = useState([]);
+  const [proveedorFiltro, setProveedorFiltro] = useState('');
+
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // `presupuestos` es el que se muestra/edita ahora mismo: mientras no hay
+  // una tabla guardada cargada (selectedViewId vacio) son los defaults
+  // globales (VendedorPresupuesto, de conveniencia para armar un pivot
+  // nuevo); en cuanto se carga o se guarda una tabla, pasan a ser la copia
+  // propia de ESA tabla (PivotSavedView.presupuestos) y editarlos ya no
+  // afecta ni el default global ni otras tablas (ver handlePresupuestoSave).
   const [presupuestos, setPresupuestos] = useState({});
+  const [globalPresupuestos, setGlobalPresupuestos] = useState({});
+
+  const [premioTiers, setPremioTiers] = useState([]);
+  const [newTierPorcentaje, setNewTierPorcentaje] = useState('');
+  const [newTierValor, setNewTierValor] = useState('');
+  const [premioError, setPremioError] = useState('');
 
   const [savedViews, setSavedViews] = useState([]);
   const [selectedViewId, setSelectedViewId] = useState('');
@@ -60,6 +111,11 @@ export default function Concursos() {
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
+    // Si la URL trae ?view=, applyView() ya deja `presupuestos` en la copia
+    // propia de esa tabla: esta bandera evita que el fetch de defaults
+    // globales (mas abajo), si resuelve despues, la pise de vuelta.
+    let appliedFromUrl = false;
+
     api
       .get('/mirror/ventas-detalle/pivot/campos/')
       .then(({ data }) => {
@@ -70,8 +126,20 @@ export default function Concursos() {
 
     api
       .get('/mirror/ventas-detalle/pivot/presupuestos/')
-      .then(({ data }) => setPresupuestos(Object.fromEntries(data.map((p) => [p.vendedor, p.monto]))))
-      .catch(() => setPresupuestos({}));
+      .then(({ data }) => {
+        const defaults = Object.fromEntries(data.map((p) => [p.vendedor, p.monto]));
+        setGlobalPresupuestos(defaults);
+        if (!appliedFromUrl) setPresupuestos(defaults);
+      })
+      .catch(() => {
+        setGlobalPresupuestos({});
+        if (!appliedFromUrl) setPresupuestos({});
+      });
+
+    api
+      .get('/mirror/ventas-detalle/pivot/premios/')
+      .then(({ data }) => setPremioTiers(data))
+      .catch(() => setPremioTiers([]));
 
     api
       .get('/mirror/ventas-detalle/pivot/vistas/')
@@ -80,17 +148,34 @@ export default function Concursos() {
         const viewIdParam = searchParams.get('view');
         if (viewIdParam) {
           const view = data.find((v) => String(v.id) === viewIdParam);
-          if (view) applyView(view);
+          if (view) {
+            appliedFromUrl = true;
+            applyView(view);
+          }
         }
       })
       .catch(() => setSavedViews([]));
 
     api
-      .get('/mirror/ventas-detalle/pivot/valores/', { params: { field: 'producto' } })
-      .then(({ data }) => setProductOptions(data))
-      .catch(() => setProductOptions([]));
+      .get('/mirror/proveedores/')
+      .then(({ data }) => setProveedores(data))
+      .catch(() => setProveedores([]));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Los productos que puede elegir "Productos que participan" dependen del
+  // proveedor filtrado (seccion 3): sin proveedor, todos los que el
+  // supervisor puede ver; con uno elegido, solo los que ESE proveedor
+  // efectivamente vende (ver PivotFieldValuesView). Se re-consulta cada vez
+  // que cambia el filtro, incluyendo al cargar una tabla guardada.
+  useEffect(() => {
+    api
+      .get('/mirror/ventas-detalle/pivot/valores/', {
+        params: { field: 'producto', ...(proveedorFiltro && { proveedor: proveedorFiltro }) },
+      })
+      .then(({ data }) => setProductOptions(data))
+      .catch(() => setProductOptions([]));
+  }, [proveedorFiltro]);
 
   const filteredProductOptions = useMemo(() => {
     if (!Array.isArray(productOptions)) return [];
@@ -177,7 +262,13 @@ export default function Concursos() {
     );
   }
 
-  const canSubmit = Boolean(fechaDesde && fechaHasta && rowField1 && (measure === 'count' || measureField));
+  const rangeTooLong =
+    Boolean(fechaDesde && fechaHasta) &&
+    (new Date(fechaHasta) - new Date(fechaDesde)) / 86400000 > MAX_RANGE_DAYS;
+
+  const canSubmit = Boolean(
+    fechaDesde && fechaHasta && rowField1 && (measure === 'count' || measureField) && !rangeTooLong,
+  );
 
   function buildConfig() {
     return {
@@ -190,6 +281,7 @@ export default function Concursos() {
       measureField,
       conditions: conditions.map(({ field, operator, value }) => ({ field, operator, value })),
       selectedProducts,
+      proveedorFiltro,
     };
   }
 
@@ -212,6 +304,7 @@ export default function Concursos() {
           ...(selectedProducts.length > 0
             ? [{ field: 'producto', operator: 'in', value: selectedProducts.join(',') }]
             : []),
+          ...(proveedorFiltro ? [{ field: 'proveedor', operator: 'eq', value: proveedorFiltro }] : []),
         ],
       });
       setResult(data);
@@ -229,6 +322,7 @@ export default function Concursos() {
     const c = view.config || {};
     setFechaDesde(c.fechaDesde || '');
     setFechaHasta(c.fechaHasta || '');
+    setDatesLocked(true);
     setRowField1(c.rowField1 || fieldsMeta?.dimensions[0]?.field || '');
     setRowField2(c.rowField2 || '');
     setColumnField(c.columnField || '');
@@ -238,12 +332,18 @@ export default function Concursos() {
     setConditions(loadedConditions);
     loadedConditions.forEach((cond) => ensureFieldValues(cond.field));
     setSelectedProducts(c.selectedProducts || []);
+    setProveedorFiltro(c.proveedorFiltro || '');
     setResult(view.result || null);
+    // El presupuesto de una tabla guardada es propio de ella (ver
+    // PivotSavedView.presupuestos): al cargarla, deja de mostrar/editar el
+    // default global y pasa a mostrar/editar unicamente su propia copia.
+    setPresupuestos(view.presupuestos || {});
   }
 
   function handleLoadView(id) {
     if (!id) {
       setSelectedViewId('');
+      setPresupuestos(globalPresupuestos);
       return;
     }
     const view = savedViews.find((v) => String(v.id) === id);
@@ -266,13 +366,19 @@ export default function Concursos() {
     const name = newViewName.trim();
     if (!name || !result) return;
     try {
+      // `presupuestos` (lo que se ve/edita ahora mismo, sea el default
+      // global o la copia de otra tabla que se tenia cargada) se copia como
+      // punto de partida de la tabla nueva; de ahi en adelante es propio de
+      // ella (ver PivotSavedView.presupuestos).
       const { data } = await api.post('/mirror/ventas-detalle/pivot/vistas/', {
         name,
         config: buildConfig(),
         result,
+        presupuestos,
       });
       setSavedViews((current) => [data, ...current]);
       setSelectedViewId(String(data.id));
+      setPresupuestos(data.presupuestos || {});
       setShowSaveAsForm(false);
       setNewViewName('');
     } catch (err) {
@@ -286,8 +392,10 @@ export default function Concursos() {
       const { data } = await api.patch(`/mirror/ventas-detalle/pivot/vistas/${selectedViewId}/`, {
         config: buildConfig(),
         result,
+        presupuestos,
       });
       setSavedViews((current) => current.map((v) => (String(v.id) === selectedViewId ? data : v)));
+      setPresupuestos(data.presupuestos || {});
     } catch (err) {
       setError(describeError(err, 'No se pudo actualizar la tabla guardada.'));
     }
@@ -312,36 +420,70 @@ export default function Concursos() {
     const monto = presupuestos[vendedor];
     if (monto === '' || monto == null) return;
     try {
-      const { data } = await api.put('/mirror/ventas-detalle/pivot/presupuestos/', { vendedor, monto });
-      setPresupuestos((current) => ({ ...current, [vendedor]: data.monto }));
+      // Con una tabla guardada cargada, el presupuesto se guarda solo en
+      // ESA tabla (nunca en el default global ni en otras tablas que
+      // compartan el mismo vendedor). Sin tabla cargada (pivot nuevo, aun
+      // sin guardar), se guarda en el default global de conveniencia.
+      if (selectedViewId) {
+        const { data } = await api.put(`/mirror/ventas-detalle/pivot/vistas/${selectedViewId}/presupuesto/`, {
+          vendedor,
+          monto,
+        });
+        setPresupuestos(data.presupuestos || {});
+        setSavedViews((current) =>
+          current.map((v) => (String(v.id) === selectedViewId ? { ...v, presupuestos: data.presupuestos } : v)),
+        );
+      } else {
+        const { data } = await api.put('/mirror/ventas-detalle/pivot/presupuestos/', { vendedor, monto });
+        setGlobalPresupuestos((current) => ({ ...current, [vendedor]: data.monto }));
+        setPresupuestos((current) => ({ ...current, [vendedor]: data.monto }));
+      }
     } catch {
       setError('No se pudo guardar el presupuesto.');
+    }
+  }
+
+  async function handleAddPremioTier() {
+    const porcentaje = newTierPorcentaje;
+    const valor = newTierValor;
+    if (porcentaje === '' || valor === '') return;
+    setPremioError('');
+    try {
+      const { data } = await api.post('/mirror/ventas-detalle/pivot/premios/', { porcentaje, valor });
+      setPremioTiers((current) => [...current, data].sort((a, b) => Number(b.porcentaje) - Number(a.porcentaje)));
+      setNewTierPorcentaje('');
+      setNewTierValor('');
+    } catch (err) {
+      const detail = err.response?.data;
+      setPremioError(detail ? Object.values(detail).flat().join(' ') : 'No se pudo agregar el tramo.');
+    }
+  }
+
+  async function handleDeletePremioTier(id) {
+    try {
+      await api.delete(`/mirror/ventas-detalle/pivot/premios/${id}/`);
+      setPremioTiers((current) => current.filter((t) => t.id !== id));
+    } catch {
+      setPremioError('No se pudo eliminar el tramo.');
     }
   }
 
   const rowsFieldLabels = result ? result.rows_fields.map((f) => dimensionLabel[f] || f) : [];
 
   return (
-    <div className="w-full flex-1 px-6 py-8 text-left">
-      <header className="mb-6 flex flex-wrap items-baseline justify-between gap-3 pr-14">
-        <div>
-          <h1 className="m-0 text-2xl font-medium tracking-tight text-text-h sm:text-3xl">
-            Concursos &middot; Análisis de ventas
-          </h1>
-          <p className="mt-1 text-sm text-text">
-            Pivot dinámico sobre el espejo de ventas (venta_detalle): agrega condiciones, elige filas/columnas y una
-            medida (conteo, recuento distinto o suma).
-          </p>
-        </div>
-        <div className="flex flex-col items-end gap-1 text-sm">
-          <Link to="/concursos/guardados" className="text-accent-500 hover:underline">
+    <div className="w-full flex-1 px-6 py-8 text-left sm:px-8">
+      <PageHeader
+        title="Concursos · Análisis de ventas"
+        subtitle="Pivot dinámico sobre el espejo de ventas (venta_detalle): agrega condiciones, elige filas/columnas y una medida (conteo, recuento distinto o suma)."
+        actions={
+          <Link
+            to="/concursos/guardados"
+            className="inline-flex items-center justify-center rounded-md border-2 border-transparent bg-accent-soft px-4 py-2 text-sm font-medium text-accent-500 no-underline transition-all hover:border-accent-border hover:-translate-y-0.5"
+          >
             Tablas guardadas
           </Link>
-          <Link to="/dashboard" className="text-accent-500 hover:underline">
-            Volver
-          </Link>
-        </div>
-      </header>
+        }
+      />
 
       {metaError && (
         <p role="alert" className="m-0 mb-4 text-sm text-danger">
@@ -351,7 +493,7 @@ export default function Concursos() {
 
       {fieldsMeta && (
         <>
-          <div className="mb-4 flex flex-row flex-wrap items-end gap-3">
+          <div className="animate-fade-in-up mb-4 flex flex-row flex-wrap items-end gap-3 rounded-lg border border-border bg-surface-muted px-4 py-3">
             <label className={labelClass}>
               Vista guardada
               <select
@@ -425,9 +567,84 @@ export default function Concursos() {
             </div>
           )}
 
-          <div className="mb-6 rounded-lg border-2 border-accent-border bg-accent-soft p-5">
+          <div className="animate-fade-in-up mb-6 rounded-lg border border-border bg-surface p-5 shadow-soft" style={{ animationDelay: "80ms" }}>
+            <div className="mb-1 flex items-center gap-2">
+              <SectionBadge n={1} />
+              <h2 className="m-0 text-base font-semibold text-text-h">Premios por cumplimiento</h2>
+            </div>
+            <p className="mb-3 text-xs text-text">
+              Define cuánto gana un vendedor según el % de cumplimiento que alcance frente a su presupuesto (por
+              ejemplo, 100% → $1.000, 90% → $900). En la tabla se aplica el tramo de mayor porcentaje que cada
+              vendedor alcance.
+            </p>
+
+            {premioError && (
+              <p role="alert" className="mb-2 text-sm text-danger">
+                {premioError}
+              </p>
+            )}
+
+            {premioTiers.length > 0 && (
+              <div className="mb-3 flex flex-col gap-1">
+                {premioTiers.map((tier) => (
+                  <div key={tier.id} className="flex flex-row items-center gap-3 text-sm text-text-h">
+                    <span className="w-20">{Number(tier.porcentaje).toLocaleString('es-CO')}%</span>
+                    <span>
+                      → ${Number(tier.valor).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleDeletePremioTier(tier.id)}
+                      className={buttonSmallClass}
+                      aria-label={`Quitar tramo de ${tier.porcentaje}%`}
+                    >
+                      Quitar
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="flex flex-row flex-wrap items-end gap-3">
+              <label className={labelClass}>
+                % Cumplimiento
+                <input
+                  type="number"
+                  step="0.01"
+                  value={newTierPorcentaje}
+                  onChange={(event) => setNewTierPorcentaje(event.target.value)}
+                  placeholder="100"
+                  className={`${inputClass} w-28`}
+                />
+              </label>
+              <label className={labelClass}>
+                Valor ganado
+                <input
+                  type="number"
+                  step="0.01"
+                  value={newTierValor}
+                  onChange={(event) => setNewTierValor(event.target.value)}
+                  placeholder="1000.00"
+                  className={`${inputClass} w-32`}
+                />
+              </label>
+              <button
+                type="button"
+                onClick={handleAddPremioTier}
+                disabled={newTierPorcentaje === '' || newTierValor === ''}
+                className={buttonSmallClass}
+              >
+                + Agregar tramo
+              </button>
+            </div>
+          </div>
+
+          <div className="animate-fade-in-up mb-6 rounded-lg border-2 border-accent-border bg-accent-soft p-5 shadow-soft" style={{ animationDelay: "140ms" }}>
             <div className="mb-1 flex flex-wrap items-baseline justify-between gap-2">
-              <h2 className="m-0 text-base font-semibold text-text-h">Productos que participan</h2>
+              <div className="flex items-center gap-2">
+                <SectionBadge n={2} />
+                <h2 className="m-0 text-base font-semibold text-text-h">Productos que participan</h2>
+              </div>
               <span className="text-xs text-text">
                 {selectedProducts.length === 0
                   ? 'Ninguno seleccionado: se incluyen todos los productos'
@@ -479,105 +696,163 @@ export default function Concursos() {
             )}
           </div>
 
-          <form onSubmit={handleSubmit} className="mb-6 flex flex-col gap-5 rounded-lg border border-border p-5">
-            <div className="flex flex-row flex-wrap items-end gap-3">
-              <label className={labelClass}>
-                Desde *
-                <input
-                  type="date"
-                  value={fechaDesde}
-                  onChange={(event) => setFechaDesde(event.target.value)}
-                  required
-                  className={`${inputClass} w-auto`}
-                />
-              </label>
-              <label className={labelClass}>
-                Hasta *
-                <input
-                  type="date"
-                  value={fechaHasta}
-                  onChange={(event) => setFechaHasta(event.target.value)}
-                  required
-                  className={`${inputClass} w-auto`}
-                />
-              </label>
+          <form onSubmit={handleSubmit} className="animate-fade-in-up mb-6 flex flex-col gap-5 rounded-lg border border-border bg-surface p-5 shadow-soft" style={{ animationDelay: "200ms" }}>
+            <div className="flex items-center gap-2">
+              <SectionBadge n={3} />
+              <h2 className="m-0 text-base font-semibold text-text-h">Configura tu pivot</h2>
+            </div>
 
-              <label className={labelClass}>
-                Fila principal
-                <select
-                  value={rowField1}
-                  onChange={(event) => setRowField1(event.target.value)}
-                  className={`${inputClass} w-auto`}
-                >
-                  {fieldsMeta.dimensions.map((d) => (
-                    <option key={d.field} value={d.field}>
-                      {d.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className={labelClass}>
-                Fila secundaria
-                <select
-                  value={rowField2}
-                  onChange={(event) => setRowField2(event.target.value)}
-                  className={`${inputClass} w-auto`}
-                >
-                  <option value="">Ninguna</option>
-                  {rowFieldOptions2.map((d) => (
-                    <option key={d.field} value={d.field}>
-                      {d.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className={labelClass}>
-                Columnas (pivot)
-                <select
-                  value={columnField}
-                  onChange={(event) => setColumnField(event.target.value)}
-                  className={`${inputClass} w-auto`}
-                >
-                  <option value="">Ninguna</option>
-                  {columnFieldOptions.map((d) => (
-                    <option key={d.field} value={d.field}>
-                      {d.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className={labelClass}>
-                Medida
-                <select
-                  value={measure}
-                  onChange={(event) => handleMeasureChange(event.target.value)}
-                  className={`${inputClass} w-auto`}
-                >
-                  {fieldsMeta.measures.map((m) => (
-                    <option key={m.value} value={m.value}>
-                      {m.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              {measure !== 'count' && (
+            <div>
+              <FieldGroupLabel>Periodo</FieldGroupLabel>
+              <div className="flex flex-row flex-wrap items-end gap-3">
                 <label className={labelClass}>
-                  Campo de la medida
+                  Desde *
+                  <input
+                    type="date"
+                    value={fechaDesde}
+                    onChange={(event) => setFechaDesde(event.target.value)}
+                    required
+                    disabled={datesLocked}
+                    className={`${inputClass} w-auto disabled:opacity-60`}
+                  />
+                </label>
+                <label className={labelClass}>
+                  Hasta *
+                  <input
+                    type="date"
+                    value={fechaHasta}
+                    onChange={(event) => setFechaHasta(event.target.value)}
+                    required
+                    disabled={datesLocked}
+                    className={`${inputClass} w-auto disabled:opacity-60`}
+                  />
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!datesLocked) {
+                      const bounds = currentMonthBounds();
+                      setFechaDesde(bounds.start);
+                      setFechaHasta(bounds.end);
+                    }
+                    setDatesLocked((current) => !current);
+                  }}
+                  className={buttonSmallClass}
+                  title={
+                    datesLocked
+                      ? 'Por defecto el concurso corre el mes actual completo. Desbloquea para un seguimiento mas largo (hasta 3 meses).'
+                      : 'Volver al mes actual'
+                  }
+                >
+                  {datesLocked ? 'Editar fechas' : 'Bloquear fechas'}
+                </button>
+              </div>
+            </div>
+
+            {proveedores.length > 0 && (
+              <div className="border-t border-border pt-4">
+                <FieldGroupLabel>Proveedor</FieldGroupLabel>
+                <select
+                  value={proveedorFiltro}
+                  onChange={(event) => setProveedorFiltro(event.target.value)}
+                  className={`${inputClass} w-auto min-w-[220px]`}
+                >
+                  <option value="">Todos los tuyos</option>
+                  {proveedores.map((proveedor) => (
+                    <option key={proveedor} value={proveedor}>
+                      {proveedor}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div className="border-t border-border pt-4">
+              <FieldGroupLabel>Filas, columnas y medida</FieldGroupLabel>
+              <div className="flex flex-row flex-wrap items-end gap-3">
+                <label className={labelClass}>
+                  Fila principal
                   <select
-                    value={measureField}
-                    onChange={(event) => setMeasureField(event.target.value)}
+                    value={rowField1}
+                    onChange={(event) => setRowField1(event.target.value)}
                     className={`${inputClass} w-auto`}
                   >
-                    {measureFieldOptions.map((f) => (
-                      <option key={f.field} value={f.field}>
-                        {f.label}
+                    {fieldsMeta.dimensions.map((d) => (
+                      <option key={d.field} value={d.field}>
+                        {d.label}
                       </option>
                     ))}
                   </select>
                 </label>
-              )}
+                <label className={labelClass}>
+                  Fila secundaria
+                  <select
+                    value={rowField2}
+                    onChange={(event) => setRowField2(event.target.value)}
+                    className={`${inputClass} w-auto`}
+                  >
+                    <option value="">Ninguna</option>
+                    {rowFieldOptions2.map((d) => (
+                      <option key={d.field} value={d.field}>
+                        {d.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className={labelClass}>
+                  Columnas (pivot)
+                  <select
+                    value={columnField}
+                    onChange={(event) => setColumnField(event.target.value)}
+                    className={`${inputClass} w-auto`}
+                  >
+                    <option value="">Ninguna</option>
+                    {columnFieldOptions.map((d) => (
+                      <option key={d.field} value={d.field}>
+                        {d.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className={labelClass}>
+                  Medida
+                  <select
+                    value={measure}
+                    onChange={(event) => handleMeasureChange(event.target.value)}
+                    className={`${inputClass} w-auto`}
+                  >
+                    {fieldsMeta.measures.map((m) => (
+                      <option key={m.value} value={m.value}>
+                        {m.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {measure !== 'count' && (
+                  <label className={labelClass}>
+                    Campo de la medida
+                    <select
+                      value={measureField}
+                      onChange={(event) => setMeasureField(event.target.value)}
+                      className={`${inputClass} w-auto`}
+                    >
+                      {measureFieldOptions.map((f) => (
+                        <option key={f.field} value={f.field}>
+                          {f.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+              </div>
             </div>
+
+            {rangeTooLong && (
+              <p role="alert" className="m-0 text-sm text-danger">
+                El rango no puede superar los 3 meses (un concurso/seguimiento dura como máximo eso).
+              </p>
+            )}
 
             <div>
               <div className="mb-2 flex items-center justify-between">
@@ -700,16 +975,20 @@ export default function Concursos() {
       )}
 
       {result && (
-        <>
-          {result.truncated && (
-            <p className="mb-3 text-sm text-text">
-              El resultado es muy grande y fue recortado a las combinaciones con mayor valor.
-            </p>
-          )}
-          <p className="mb-3 text-sm text-text">
-            {result.measure_label} &middot; total general:{' '}
-            <span className="text-base font-semibold text-accent-500">{formatValue(result.grand_total, measure)}</span>
-          </p>
+        <div className="animate-fade-in-up">
+          <div className="mb-4 flex flex-wrap items-center gap-4 rounded-lg border border-border bg-surface-muted px-5 py-4 shadow-soft">
+            <div>
+              <p className="m-0 text-xs text-text uppercase tracking-wide">{result.measure_label} &middot; total general</p>
+              <p className="m-0 mt-0.5 text-2xl font-semibold text-accent-500">
+                {formatValue(result.grand_total, measure)}
+              </p>
+            </div>
+            {result.truncated && (
+              <span className="rounded-full bg-danger-soft px-3 py-1 text-xs font-medium text-danger">
+                Resultado recortado a las combinaciones con mayor valor
+              </span>
+            )}
+          </div>
 
           <PivotResultTable
             result={result}
@@ -719,8 +998,9 @@ export default function Concursos() {
             presupuestos={presupuestos}
             onPresupuestoChange={handlePresupuestoInput}
             onPresupuestoSave={handlePresupuestoSave}
+            premioTiers={premioTiers}
           />
-        </>
+        </div>
       )}
     </div>
   );

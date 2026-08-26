@@ -1,4 +1,5 @@
 import { Fragment } from 'react';
+import { computeCompletion, computePremio } from '../utils/concursoMath';
 
 const thClass = 'sticky top-0 border-b border-border bg-surface-muted px-3 py-2 text-left font-medium text-text-h';
 const tdClass = 'border-b border-border px-3 py-2 text-left';
@@ -10,10 +11,24 @@ function formatValue(value, measure) {
   return Number(value).toLocaleString('es-CO', options);
 }
 
+function formatPercent(value) {
+  if (value == null) return '—';
+  return `${value.toLocaleString('es-CO', { maximumFractionDigits: 2 })}%`;
+}
+
+function formatMoney(value) {
+  if (value == null) return '—';
+  return Number(value).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 /** Renderiza la tabla resultado de un pivot (Concursos). Si `showBudget` es
  * true y `vendedor_nombre` esta entre las filas, inserta una columna
- * "Presupuesto" editable justo despues (requiere `presupuestos` +
- * `onPresupuestoChange`/`onPresupuestoSave`); si no, se omite. */
+ * "Presupuesto" justo despues (editable si `budgetEditable`, requiere
+ * `presupuestos` + `onPresupuestoChange`/`onPresupuestoSave`; de solo lectura
+ * si `budgetEditable=false`, para vistas como el Dashboard) y agrega al final
+ * "% Cumplimiento" (valor / presupuesto), "Faltante" (presupuesto - valor) y,
+ * si hay `premioTiers`, "Premio" (cuanto gana el vendedor segun el tramo
+ * alcanzado); si no, se omiten. */
 export default function PivotResultTable({
   result,
   measure,
@@ -22,11 +37,30 @@ export default function PivotResultTable({
   presupuestos = {},
   onPresupuestoChange,
   onPresupuestoSave,
+  premioTiers = [],
+  budgetEditable = true,
 }) {
   const vendedorIndex = showBudget ? result.rows_fields.indexOf('vendedor_nombre') : -1;
+  const showPremio = vendedorIndex >= 0 && premioTiers.length > 0;
+
+  const budgetTotalPresupuesto =
+    vendedorIndex >= 0
+      ? result.data.reduce((sum, entry) => {
+          const raw = presupuestos[entry.row[vendedorIndex]];
+          return raw === '' || raw == null ? sum : sum + (Number(raw) || 0);
+        }, 0)
+      : 0;
+  const budgetGrandTotal = vendedorIndex >= 0 ? computeCompletion(budgetTotalPresupuesto || null, result.grand_total) : null;
+
+  const premioGrandTotal = showPremio
+    ? result.data.reduce((sum, entry) => {
+        const { cumplimiento } = computeCompletion(presupuestos[entry.row[vendedorIndex]], entry.total || 0);
+        return sum + (computePremio(cumplimiento, premioTiers) || 0);
+      }, 0)
+    : null;
 
   return (
-    <div className="w-full overflow-x-auto rounded-lg border border-border">
+    <div className="w-full overflow-x-auto rounded-lg border border-border shadow-soft">
       <table className="w-full border-collapse text-sm whitespace-nowrap">
         <thead>
           <tr>
@@ -43,9 +77,16 @@ export default function PivotResultTable({
                 </th>
               ))
             ) : (
-              <th className={thClass}>Valor</th>
+              <th className={thClass}>{result.measure_label || 'Valor'}</th>
             )}
             <th className={`${thClass} text-accent-500`}>Total</th>
+            {vendedorIndex >= 0 && (
+              <>
+                <th className={`${thClass} text-text`}>% Cumplimiento</th>
+                <th className={`${thClass} text-text`}>Faltante</th>
+              </>
+            )}
+            {showPremio && <th className={`${thClass} text-text`}>Premio</th>}
           </tr>
         </thead>
         <tbody>
@@ -61,19 +102,22 @@ export default function PivotResultTable({
                 {entry.row.map((value, i) => (
                   <Fragment key={i}>
                     <td className={tdClass}>{value}</td>
-                    {i === vendedorIndex && (
-                      <td className={`${tdClass} text-text`}>
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={presupuestos[value] ?? ''}
-                          onChange={(event) => onPresupuestoChange?.(value, event.target.value)}
-                          onBlur={() => onPresupuestoSave?.(value)}
-                          placeholder="0.00"
-                          className="w-28 rounded border border-border bg-surface px-2 py-1 text-sm text-text focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-1"
-                        />
-                      </td>
-                    )}
+                    {i === vendedorIndex &&
+                      (budgetEditable ? (
+                        <td className={`${tdClass} text-text`}>
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={presupuestos[value] ?? ''}
+                            onChange={(event) => onPresupuestoChange?.(value, event.target.value)}
+                            onBlur={() => onPresupuestoSave?.(value)}
+                            placeholder="0.00"
+                            className="w-28 rounded border border-border bg-surface px-2 py-1 text-sm text-text focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-1"
+                          />
+                        </td>
+                      ) : (
+                        <td className={`${tdClass} text-text`}>{formatMoney(presupuestos[value] ?? null)}</td>
+                      ))}
                   </Fragment>
                 ))}
                 {result.columns_field ? (
@@ -88,6 +132,24 @@ export default function PivotResultTable({
                 <td className={`${tdClass} text-base font-semibold text-accent-500`}>
                   {formatValue(entry.total, measure)}
                 </td>
+                {(vendedorIndex >= 0 || showPremio) &&
+                  (() => {
+                    const { cumplimiento, faltante } = computeCompletion(
+                      presupuestos[entry.row[vendedorIndex]],
+                      entry.total || 0,
+                    );
+                    return (
+                      <>
+                        {vendedorIndex >= 0 && (
+                          <>
+                            <td className={tdClass}>{formatPercent(cumplimiento)}</td>
+                            <td className={tdClass}>{faltante == null ? '—' : formatValue(faltante, measure)}</td>
+                          </>
+                        )}
+                        {showPremio && <td className={tdClass}>{formatMoney(computePremio(cumplimiento, premioTiers))}</td>}
+                      </>
+                    );
+                  })()}
               </tr>
             ))
           )}
@@ -109,6 +171,17 @@ export default function PivotResultTable({
               <td className={`${tdClass} text-base font-semibold text-accent-500`}>
                 {formatValue(result.grand_total, measure)}
               </td>
+              {vendedorIndex >= 0 && (
+                <>
+                  <td className={`${tdClass} font-medium text-text-h`}>{formatPercent(budgetGrandTotal.cumplimiento)}</td>
+                  <td className={`${tdClass} font-medium text-text-h`}>
+                    {budgetGrandTotal.faltante == null ? '—' : formatValue(budgetGrandTotal.faltante, measure)}
+                  </td>
+                </>
+              )}
+              {showPremio && (
+                <td className={`${tdClass} font-medium text-text-h`}>{formatMoney(premioGrandTotal)}</td>
+              )}
             </tr>
           </tfoot>
         )}

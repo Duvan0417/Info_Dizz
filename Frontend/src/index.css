@@ -76,6 +76,143 @@
   --shadow-soft: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05);
 }
 
+/* Tema "noir" (rojo/negro/blanco) para las vistas de SUPERVISOR y ADMIN:
+   mismo mecanismo que .dark/.light (reasignar los tokens de @theme), pero
+   aplicado a un scope (clase en un contenedor) en vez de a :root, para no
+   afectar el resto de la app (login, PROVEEDOR, DIRECTOR). */
+.theme-noir {
+  --color-bg: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f5f5f5;
+  --color-border: #e2e2e2;
+  --color-text: #52525b;
+  --color-text-h: #0a0a0a;
+
+  --color-accent-50: #fef2f2;
+  --color-accent-100: #fee2e2;
+  --color-accent-400: #f87171;
+  --color-accent-500: #dc2626;
+  --color-accent-600: #b91c1c;
+  --color-accent-soft: rgba(220, 38, 38, 0.08);
+  --color-accent-border: rgba(220, 38, 38, 0.35);
+
+  --shadow-soft: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -2px rgb(0 0 0 / 0.04);
+}
+
+:root.dark .theme-noir {
+  --color-bg: #0a0a0a;
+  --color-surface: #161616;
+  --color-surface-muted: #202020;
+  --color-border: #2d2d2d;
+  --color-text: #a3a3a3;
+  --color-text-h: #ffffff;
+
+  --color-accent-400: #fca5a5;
+  --color-accent-500: #ef4444;
+  --color-accent-600: #dc2626;
+  --color-accent-soft: rgba(239, 68, 68, 0.16);
+  --color-accent-border: rgba(239, 68, 68, 0.5);
+
+  --shadow-soft: 0 10px 15px -3px rgb(0 0 0 / 0.55), 0 4px 6px -2px rgb(0 0 0 / 0.35);
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes soft-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  75%,
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.35s ease-out both;
+}
+
+.animate-soft-pulse {
+  animation: soft-pulse 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Imprimir solo un fragmento de la pagina (ej. una tabla), sin sidebar,
+   filtros ni el resto del chrome: envolver lo que se quiere imprimir en
+   .print-area (ver boton "Imprimir" en ClientesSinVenta.jsx). */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+  .print-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+  .no-print {
+    display: none !important;
+  }
+
+  /* Apaisado por defecto (mas ancho para tablas con varias columnas) y
+     tipografia/celdas mas compactas: sin esto una tabla con varias columnas
+     (ej. Clientes sin venta) se corta a la derecha o desborda el ancho de
+     la hoja en vertical. */
+  @page {
+    size: landscape;
+    margin: 10mm;
+  }
+
+  /* El contenedor con scroll horizontal (necesario en pantalla) recorta la
+     tabla en la vista impresa si se deja tal cual: una hoja no puede
+     "scrollear", asi que sin esto se pierden las columnas que quedaban
+     fuera del area visible. */
+  .print-area .overflow-x-auto {
+    overflow: visible !important;
+  }
+
+  .print-area table {
+    width: 100%;
+    table-layout: auto;
+    font-size: 10px;
+    white-space: normal !important;
+  }
+
+  .print-area th,
+  .print-area td {
+    padding: 3px 6px !important;
+  }
+
+  .print-area .shadow-soft {
+    box-shadow: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 @layer base {
   html {
     color-scheme: light dark;

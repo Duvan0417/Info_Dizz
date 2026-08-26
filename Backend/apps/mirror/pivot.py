@@ -74,6 +74,19 @@ MEASURES = {
     'sum': 'Suma',
 }
 
+# Campos de cliente: un "recuento distinto" sobre alguno de estos cuenta
+# clientes distintos alcanzados, no una venta, asi que la medida se etiqueta
+# "Impactos" en vez de "Recuento distinto" (ver measure_label()).
+CLIENTE_FIELDS = {'nom_cliente', 'nit_cliente', 'cod_cliente'}
+
+
+def measure_label(measure, measure_field):
+    """Etiqueta legible de la medida para mostrar en el pivot (se guarda tal
+    cual en `result.measure_label` al crear/actualizar una tabla)."""
+    if measure == 'distinct_count' and measure_field in CLIENTE_FIELDS:
+        return 'Impactos'
+    return MEASURES[measure]
+
 ROW_LIMIT = 300
 COLUMN_LIMIT = 60
 RAW_LIMIT = 20000
@@ -206,7 +219,15 @@ def run_pivot(qs, rows, columns, measure, measure_field):
 
     for entry in raw_rows:
         row_key = tuple(entry[field] if entry[field] not in (None, '') else '(sin dato)' for field in rows)
+        # Sum(measure_field) sobre un DecimalField (ej. line_total_final)
+        # devuelve Decimal, no serializable por el encoder JSON por defecto
+        # de Django (lo que crashea PivotSavedViewSet.actualizar al guardar
+        # `result` en el JSONField): se convierte a float apenas se extrae,
+        # asi toda la acumulacion de abajo (totales por fila/columna/general)
+        # ya queda en tipos nativos de JSON.
         value = entry['value'] or 0
+        if isinstance(value, Decimal):
+            value = float(value)
         col_value = (entry[columns] if entry[columns] not in (None, '') else '(sin dato)') if columns else NO_COLUMN_KEY
 
         row_values.setdefault(row_key, {})

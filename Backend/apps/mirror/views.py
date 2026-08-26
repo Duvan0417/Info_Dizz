@@ -1,22 +1,28 @@
+from datetime import date
 from decimal import Decimal, InvalidOperation
 
 from django.db.models import Count, Sum
 from rest_framework import mixins
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet, ReadOnlyModelViewSet
 
-from Backend.apps.users.permissions import HasRole, IsAdmin, IsSupervisor
+from Backend.apps.users.permissions import HasRole, IsAdmin, IsSupervisor, IsVendedor
 from Backend.apps.users.scoping import apply_scoping, scoped_proveedores, scoped_vendedores
 
 from . import pivot
-from .models import PivotSavedView, ProductoPrecioSap, VendedorPresupuesto, VentaDetalle, Vendedor
-from .serializers import PivotSavedViewSerializer, VendedorPresupuestoSerializer, VentaDetalleSerializer
-from .utils import parse_fecha, require_fecha_range
+from .models import MaestraCliente, PivotSavedView, PremioTier, ProductoPrecioSap, VendedorPresupuesto, VentaDetalle, Vendedor
+from .serializers import (
+    PivotSavedViewSerializer,
+    PremioTierSerializer,
+    VendedorPresupuestoSerializer,
+    VentaDetalleSerializer,
+)
+from .utils import latest_mes_maestra, month_bounds, parse_fecha, parse_fecha_or_none, require_fecha_range
 
 
 class VentaDetallePagination(PageNumberPagination):
@@ -171,15 +177,20 @@ class PivotVentaDetalleView(APIView):
         qs = apply_scoping(qs, request.user)
 
         result = pivot.run_pivot(qs, rows, columns, measure, measure_field)
-        result['measure_label'] = pivot.MEASURES[measure]
+        result['measure_label'] = pivot.measure_label(measure, measure_field)
         result['measure_field'] = measure_field
         return Response(result)
 
 
 class PivotFieldValuesView(APIView):
     """Valores distintos existentes de un campo dimension (para la lista
-    desplegable de valores en las condiciones de filtro del pivot). Solo
-    SUPERVISOR, con el mismo scoping de proveedores/vendedores."""
+    desplegable de valores en las condiciones de filtro del pivot, y para la
+    lista de productos que participan). Solo SUPERVISOR, con el mismo
+    scoping de proveedores/vendedores.
+
+    `?proveedor=<nombre>` acota ademas a ese proveedor puntual (ej. la lista
+    de productos se recorta a los que efectivamente vende ese proveedor,
+    cuando el supervisor filtra por uno especifico en Concursos)."""
 
     permission_classes = [IsSupervisor]
 
@@ -189,6 +200,10 @@ class PivotFieldValuesView(APIView):
             raise ValidationError({'field': f'Campo no permitido: {field!r}.'})
 
         qs = apply_scoping(VentaDetalle.objects.using('mirror'), request.user)
+        proveedor = request.query_params.get('proveedor')
+        if proveedor:
+            qs = qs.filter(proveedor=proveedor)
+
         values = (
             qs.exclude(**{field: None})
             .exclude(**{field: ''})
@@ -201,9 +216,10 @@ class PivotFieldValuesView(APIView):
 
 class VendedorPresupuestoListView(APIView):
     """Presupuesto por vendedor: lista (scopeada a los vendedores del
-    SUPERVISOR) y upsert de un vendedor a la vez."""
+    SUPERVISOR, o al unico vendedor de un VENDEDOR) y upsert de un vendedor a
+    la vez (solo SUPERVISOR: un VENDEDOR ve su presupuesto pero no lo edita)."""
 
-    permission_classes = [IsSupervisor]
+    permission_classes = [IsSupervisor | IsVendedor]
 
     def get(self, request):
         allowed = scoped_vendedores(request.user)
@@ -213,6 +229,9 @@ class VendedorPresupuestoListView(APIView):
         return Response(VendedorPresupuestoSerializer(qs, many=True).data)
 
     def put(self, request):
+        if request.user.role != request.user.Role.SUPERVISOR:
+            raise PermissionDenied('Solo un SUPERVISOR puede editar presupuestos.')
+
         vendedor = request.data.get('vendedor')
         monto = request.data.get('monto')
         if not vendedor:
@@ -233,6 +252,30 @@ class VendedorPresupuestoListView(APIView):
         return Response(VendedorPresupuestoSerializer(obj).data)
 
 
+class PremioTierViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+    GenericViewSet,
+):
+    """Tramos de premio por cumplimiento ({porcentaje, valor}), globales y
+    compartidos entre supervisores, igual que VendedorPresupuesto. Se usan en
+    Concursos para calcular cuanto gana cada vendedor segun su % de
+    cumplimiento del presupuesto. Un VENDEDOR solo puede listarlos (para ver
+    cuanto va ganando en sus propios concursos), nunca crearlos ni borrarlos."""
+
+    serializer_class = PremioTierSerializer
+    queryset = PremioTier.objects.all()
+
+    def get_permissions(self):
+        if self.action == 'list':
+            return [(IsSupervisor | IsVendedor)()]
+        return [IsSupervisor()]
+
+    def perform_create(self, serializer):
+        serializer.save(updated_by=self.request.user)
+
+
 class PivotSavedViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
@@ -240,8 +283,10 @@ class PivotSavedViewSet(
     mixins.DestroyModelMixin,
     GenericViewSet,
 ):
-    """Vistas de pivot guardadas por el SUPERVISOR actual (config, no el
-    resultado: se recalcula en vivo al reabrirlas)."""
+    """Vistas de pivot guardadas por el SUPERVISOR actual: guardan `config` +
+    el `result` congelado. `fecha_inicio`/`fecha_fin` se copian de
+    config.fechaDesde/fechaHasta en cada create/update, para el seguimiento de
+    concursos (accion `actualizar`)."""
 
     serializer_class = PivotSavedViewSerializer
     permission_classes = [IsSupervisor]
@@ -250,7 +295,214 @@ class PivotSavedViewSet(
         return PivotSavedView.objects.filter(owner=self.request.user)
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        config = serializer.validated_data.get('config') or {}
+        serializer.save(
+            owner=self.request.user,
+            fecha_inicio=parse_fecha_or_none(config.get('fechaDesde')),
+            fecha_fin=parse_fecha_or_none(config.get('fechaHasta')),
+        )
+
+    def perform_update(self, serializer):
+        config = serializer.validated_data.get('config')
+        extra = {}
+        if config is not None:
+            extra['fecha_inicio'] = parse_fecha_or_none(config.get('fechaDesde'))
+            extra['fecha_fin'] = parse_fecha_or_none(config.get('fechaHasta'))
+        serializer.save(**extra)
+
+    @action(detail=True, methods=['post'], url_path='actualizar')
+    def actualizar(self, request, pk=None):
+        """Recalcula `result` con datos frescos, sin tocar el rango de fechas
+        ni el resto de la configuracion guardada. Solo disponible mientras el
+        concurso no este cerrado; si al actualizar ya se llego (o se paso) la
+        `fecha_fin`, esta actualizacion es la ultima: queda `cerrado=True`."""
+        view = self.get_object()
+        if view.cerrado:
+            raise ValidationError({'detail': 'Este concurso ya esta cerrado, no se puede actualizar.'})
+        if not view.fecha_inicio or not view.fecha_fin:
+            raise ValidationError({'detail': 'Esta tabla no tiene un rango de fechas valido para actualizar.'})
+
+        config = view.config or {}
+        rows = pivot.validate_rows([f for f in [config.get('rowField1'), config.get('rowField2')] if f])
+        columns = pivot.validate_columns(config.get('columnField') or None, rows)
+        measure, measure_field = pivot.validate_measure(config.get('measure'), config.get('measureField'))
+
+        raw_filters = list(config.get('conditions') or [])
+        selected_products = config.get('selectedProducts') or []
+        if selected_products:
+            raw_filters.append({'field': 'producto', 'operator': 'in', 'value': ','.join(selected_products)})
+        proveedor_filtro = config.get('proveedorFiltro')
+        if proveedor_filtro:
+            raw_filters.append({'field': 'proveedor', 'operator': 'eq', 'value': proveedor_filtro})
+        cleaned_filters = pivot.validate_filters(raw_filters)
+
+        qs = VentaDetalle.objects.using('mirror').filter(fecha__gte=view.fecha_inicio, fecha__lte=view.fecha_fin)
+        qs = pivot.apply_filters(qs, cleaned_filters)
+        qs = apply_scoping(qs, request.user)
+
+        result = pivot.run_pivot(qs, rows, columns, measure, measure_field)
+        result['measure_label'] = pivot.measure_label(measure, measure_field)
+        result['measure_field'] = measure_field
+
+        view.result = result
+        if date.today() > view.fecha_fin:
+            view.cerrado = True
+        view.save()
+
+        return Response(PivotSavedViewSerializer(view).data)
+
+    @action(detail=True, methods=['put'], url_path='presupuesto')
+    def set_presupuesto(self, request, pk=None):
+        """Actualiza el presupuesto de UN vendedor dentro de ESTA tabla
+        unicamente: nunca toca VendedorPresupuesto (el default global) ni el
+        presupuesto guardado en otras tablas, aunque compartan el mismo
+        vendedor."""
+        view = self.get_object()
+        vendedor = request.data.get('vendedor')
+        if not vendedor:
+            raise ValidationError({'vendedor': 'Este campo es obligatorio.'})
+
+        monto = request.data.get('monto')
+        try:
+            monto = Decimal(str(monto))
+        except (InvalidOperation, TypeError):
+            raise ValidationError({'monto': 'Debe ser un numero valido.'})
+
+        presupuestos = dict(view.presupuestos or {})
+        presupuestos[vendedor] = str(monto)
+        view.presupuestos = presupuestos
+        view.save(update_fields=['presupuestos', 'updated_at'])
+
+        return Response(PivotSavedViewSerializer(view).data)
+
+
+class VendedorConcursosView(APIView):
+    """Concursos vigentes (no cerrados, con `result`) donde el vendedor
+    asignado al VENDEDOR autenticado aparece entre las filas del pivot
+    guardado por un SUPERVISOR. Devuelve el mismo shape que
+    PivotSavedViewSerializer, pero con `result.data` recortado a unicamente
+    la(s) fila(s) de ese vendedor (nunca las de sus companeros) y
+    `grand_total` recalculado sobre ese subconjunto. Es la unica ventana que
+    tiene un VENDEDOR sobre los concursos: sin esto no ve nada."""
+
+    permission_classes = [IsVendedor]
+
+    def get(self, request):
+        allowed = scoped_vendedores(request.user)
+        vendedor = allowed[0] if allowed else None
+        if not vendedor:
+            return Response([])
+
+        views = PivotSavedView.objects.filter(cerrado=False, result__isnull=False).order_by('-updated_at')
+        out = []
+        for view in views:
+            result = view.result or {}
+            rows_fields = result.get('rows_fields') or []
+            if 'vendedor_nombre' not in rows_fields:
+                continue
+            idx = rows_fields.index('vendedor_nombre')
+            data = result.get('data') or []
+            mine = [entry for entry in data if len(entry.get('row') or []) > idx and entry['row'][idx] == vendedor]
+            if not mine:
+                continue
+
+            grand_total = sum(Decimal(str(entry.get('total') or 0)) for entry in mine)
+            mi_presupuesto = (view.presupuestos or {}).get(vendedor)
+            out.append(
+                {
+                    'id': view.id,
+                    'name': view.name,
+                    'config': view.config,
+                    'result': {**result, 'data': mine, 'grand_total': float(grand_total)},
+                    'presupuestos': {vendedor: mi_presupuesto} if mi_presupuesto is not None else {},
+                    'fecha_inicio': view.fecha_inicio,
+                    'fecha_fin': view.fecha_fin,
+                    'cerrado': view.cerrado,
+                }
+            )
+        return Response(out)
+
+
+class ClientesSinVentaView(APIView):
+    """Clientes asignados a los vendedores de `request.user` (maestra_clientes,
+    siempre el mes mas reciente disponible — ver utils.latest_mes_maestra) que
+    no tienen ninguna venta registrada ese mes. VENDEDOR ve solo sus propios
+    clientes (scoped_vendedores le devuelve exactamente 1); SUPERVISOR ve la
+    union de todos sus vendedores asignados (scoped_vendedores, 0 o mas — ver
+    tiles de "Clientes totales"/"Sin compra" en ConcursosOverview). Con
+    `?proveedor=<nombre>` el criterio se acota: clientes que no le compraron
+    nada a ESE proveedor puntual (aunque le hayan comprado a otro) en vez de
+    "ninguna venta de nada". Para SUPERVISOR, `?vendedor=<nombre>` (repetible)
+    acota ademas a uno o varios de sus vendedores asignados en vez de la union
+    de todos; nunca amplia el scope (se intersecta con scoped_vendedores)."""
+
+    permission_classes = [IsVendedor | IsSupervisor]
+
+    def get(self, request):
+        vendedores_scope = sorted(scoped_vendedores(request.user) or [])
+        vendedor_filtro = request.query_params.getlist('vendedor')
+        vendedores = [v for v in vendedores_scope if v in vendedor_filtro] if vendedor_filtro else vendedores_scope
+
+        mes = latest_mes_maestra() if vendedores_scope else None
+        if not vendedores_scope or not mes:
+            return Response(
+                {'mes_maestra': mes, 'total_clientes': 0, 'proveedores': [], 'vendedores': [], 'clientes': []}
+            )
+
+        fecha_desde, fecha_hasta = month_bounds(mes)
+
+        clientes_maestra = (
+            MaestraCliente.objects.using('mirror')
+            .filter(mes_maestra=mes, vendedor__in=vendedores)
+            .exclude(cod_cliente__isnull=True)
+            .exclude(cod_cliente__exact='')
+            .order_by('nombre')
+        )
+
+        ventas_periodo = VentaDetalle.objects.using('mirror').filter(
+            vendedor_nombre__in=vendedores, fecha__gte=fecha_desde, fecha__lte=fecha_hasta
+        )
+
+        proveedor_filtro = request.query_params.get('proveedor') or ''
+        ventas_para_criterio = ventas_periodo.filter(proveedor=proveedor_filtro) if proveedor_filtro else ventas_periodo
+        con_venta = set(
+            ventas_para_criterio.exclude(cod_cliente__isnull=True)
+            .exclude(cod_cliente__exact='')
+            .values_list('cod_cliente', flat=True)
+            .distinct()
+        )
+
+        clientes = [
+            {
+                'cod_cliente': c.cod_cliente,
+                'nombre': c.nombre,
+                'negocio': c.negocio,
+                'direccion': c.direccion,
+                'telefono': c.telefono,
+                'unidad': c.unidad,
+                'dia_visita': c.dia_visita,
+            }
+            for c in clientes_maestra
+            if c.cod_cliente not in con_venta
+        ]
+
+        proveedores = list(
+            ventas_periodo.exclude(proveedor__isnull=True)
+            .exclude(proveedor__exact='')
+            .order_by('proveedor')
+            .values_list('proveedor', flat=True)
+            .distinct()
+        )
+
+        return Response(
+            {
+                'mes_maestra': mes,
+                'total_clientes': clientes_maestra.count(),
+                'proveedores': proveedores,
+                'vendedores': vendedores_scope,
+                'clientes': clientes,
+            }
+        )
 
 
 class VendedoresListView(APIView):

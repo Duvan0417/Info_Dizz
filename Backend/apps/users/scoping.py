@@ -15,11 +15,13 @@ def scoped_proveedores(user):
 def scoped_vendedores(user):
     """Vendedores que `user` puede ver, o None si no aplica restriccion.
 
-    Solo restringe SUPERVISOR. Se combina con scoped_proveedores() con AND:
-    un SUPERVISOR sin VendedorAccess asignado no ve nada por esta dimension
+    Restringe SUPERVISOR (0 o mas, se combina con scoped_proveedores() con
+    AND) y VENDEDOR (exactamente 1, ver set_vendedores: es su propio
+    identificador de vendedor, no se combina con proveedor). Un usuario
+    restringido sin VendedorAccess asignado no ve nada por esta dimension
     (mismo criterio que scoped_proveedores).
     """
-    if user.role != user.Role.SUPERVISOR:
+    if user.role not in (user.Role.SUPERVISOR, user.Role.VENDEDOR):
         return None
     return list(user.vendedor_access.values_list('vendedor', flat=True))
 

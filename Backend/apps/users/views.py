@@ -89,17 +89,22 @@ class UserAdminViewSet(
     @action(detail=True, methods=['put'], url_path='vendedores')
     def set_vendedores(self, request, pk=None):
         """Reemplaza por completo el set de vendedores asignados a este
-        usuario. Solo aplica a SUPERVISOR (se combina con AND junto a
-        proveedores para filtrar que ventas puede ver)."""
+        usuario. SUPERVISOR: 0 o mas (se combina con AND junto a proveedores
+        para filtrar que ventas puede ver). VENDEDOR: exactamente 1
+        (identifica cual es su propia fila de ventas; no se combina con
+        proveedores)."""
         user = self.get_object()
-        if user.role != User.Role.SUPERVISOR:
-            raise ValidationError({'vendedores': 'Solo se puede asignar vendedores a un usuario SUPERVISOR.'})
+        if user.role not in (User.Role.SUPERVISOR, User.Role.VENDEDOR):
+            raise ValidationError({'vendedores': 'Solo se puede asignar vendedores a un usuario SUPERVISOR o VENDEDOR.'})
 
         vendedores = request.data.get('vendedores')
         if not isinstance(vendedores, list) or not all(isinstance(v, str) for v in vendedores):
             raise ValidationError({'vendedores': 'Debe ser una lista de nombres de vendedor (strings).'})
 
         unique_vendedores = list(dict.fromkeys(v for v in vendedores if v))
+
+        if user.role == User.Role.VENDEDOR and len(unique_vendedores) != 1:
+            raise ValidationError({'vendedores': 'Un usuario VENDEDOR debe tener exactamente un vendedor asignado.'})
 
         VendedorAccess.objects.filter(user=user).delete()
         VendedorAccess.objects.bulk_create(

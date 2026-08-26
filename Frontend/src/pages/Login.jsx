@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import PasswordInput from '../components/PasswordInput';
+import ThemeToggle from '../components/ThemeToggle';
 
 function UserIcon() {
   return (
@@ -20,8 +21,11 @@ function LockIcon() {
 }
 
 const fieldClass =
-  'w-full rounded-xl border border-white/10 bg-white/5 py-3.5 pr-10 pl-11 text-base text-white placeholder-white/30 outline-none transition-colors focus:border-blue-400/60 focus:bg-white/[0.07] focus:ring-2 focus:ring-blue-500/30';
+  'w-full box-border rounded-xl border border-border bg-surface-muted py-3.5 pr-10 pl-11 text-base text-text-h placeholder-text/50 outline-none transition-colors focus:border-accent-500 focus:bg-surface focus:ring-2 focus:ring-accent-500/30';
 
+// El login siempre usa la paleta rojo/negro/blanco (.theme-noir): el rol
+// todavia no se conoce en este punto, asi que no puede scoparse por rol como
+// el resto del Dashboard/Concursos/Administracion.
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -51,16 +55,16 @@ export default function Login() {
   }
 
   return (
-    <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-[#05070d] px-6 py-12">
-      <div className="pointer-events-none absolute -top-32 -left-24 h-96 w-96 rounded-full bg-blue-600/40 blur-[100px]" />
-      <div className="pointer-events-none absolute -right-16 -bottom-32 h-96 w-96 rounded-full bg-emerald-500/30 blur-[100px]" />
-      <div className="pointer-events-none absolute top-1/3 right-1/4 h-72 w-72 rounded-full bg-indigo-500/20 blur-[100px]" />
+    <div className="theme-noir relative flex flex-1 items-center justify-center overflow-hidden bg-bg px-6 py-12">
+      <ThemeToggle className="absolute top-4 right-4 z-10" />
+      <div className="pointer-events-none absolute -top-32 -left-24 h-96 w-96 rounded-full bg-accent-500/20 blur-[100px]" />
+      <div className="pointer-events-none absolute -right-16 -bottom-32 h-96 w-96 rounded-full bg-accent-600/15 blur-[100px]" />
 
-      <div className="relative z-10 grid w-full max-w-5xl overflow-hidden rounded-[28px] border border-white/10 bg-[#0b0e14]/90 shadow-2xl backdrop-blur md:min-h-[600px] md:grid-cols-2">
-        <div className="relative m-3 hidden overflow-hidden rounded-2xl bg-gradient-to-br from-blue-700 via-indigo-800 to-emerald-800 p-8 md:flex md:flex-col md:justify-end">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.18),transparent_60%)]" />
+      <div className="animate-fade-in-up relative z-10 grid w-full max-w-5xl overflow-hidden rounded-[28px] border border-border bg-surface shadow-2xl md:min-h-[600px] md:grid-cols-2">
+        <div className="relative m-3 hidden overflow-hidden rounded-2xl bg-gradient-to-br from-accent-600 via-black to-black p-8 md:flex md:flex-col md:justify-end">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.12),transparent_60%)]" />
           <div className="relative">
-            <span className="inline-flex items-center gap-2 rounded-full bg-black/30 px-3.5 py-2 text-sm font-medium text-white backdrop-blur">
+            <span className="inline-flex items-center gap-2 rounded-full bg-black/40 px-3.5 py-2 text-sm font-medium text-white backdrop-blur">
               DIZFRANCO
             </span>
             <p className="mt-3 max-w-xs text-base text-white/70">Gestión de ventas, cierres y proveedores.</p>
@@ -69,13 +73,13 @@ export default function Login() {
 
         <div className="flex flex-col justify-center gap-6 p-10 sm:p-14">
           <div>
-            <h1 className="m-0 text-3xl font-semibold text-white">Bienvenido de nuevo</h1>
-            <p className="mt-2 text-base text-white/50">Ingresa tus credenciales para continuar</p>
+            <h1 className="m-0 text-3xl font-semibold text-text-h">Bienvenido de nuevo</h1>
+            <p className="mt-2 text-base text-text">Ingresa tus credenciales para continuar</p>
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="relative flex items-center">
-              <span className="pointer-events-none absolute left-4 text-white/40">
+              <span className="pointer-events-none absolute left-4 text-text/70">
                 <UserIcon />
               </span>
               <input
@@ -91,7 +95,7 @@ export default function Login() {
             </div>
 
             <div className="relative flex items-center">
-              <span className="pointer-events-none absolute left-4 z-10 text-white/40">
+              <span className="pointer-events-none absolute left-4 z-10 text-text/70">
                 <LockIcon />
               </span>
               <PasswordInput
@@ -102,13 +106,12 @@ export default function Login() {
                 aria-label="Contraseña"
                 placeholder="Contraseña"
                 required
-                inputClassName={fieldClass}
-                toggleClassName="text-white/40 hover:text-white"
+                inputClassName={`${fieldClass} pr-9`}
               />
             </div>
 
             {error && (
-              <p role="alert" className="m-0 text-sm text-red-400">
+              <p role="alert" className="m-0 text-sm text-danger">
                 {error}
               </p>
             )}
@@ -116,13 +119,13 @@ export default function Login() {
             <button
               type="submit"
               disabled={submitting}
-              className="mt-2 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-emerald-500 px-4 py-3.5 text-base font-semibold text-white shadow-lg shadow-blue-900/30 transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 focus:ring-offset-[#0b0e14] disabled:cursor-not-allowed disabled:opacity-50"
+              className="mt-2 inline-flex items-center justify-center rounded-xl bg-accent-500 px-4 py-3.5 text-base font-semibold text-white shadow-lg shadow-accent-500/20 transition-all hover:not-disabled:bg-accent-600 hover:not-disabled:-translate-y-0.5 active:not-disabled:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-accent-500/50 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {submitting ? 'Ingresando...' : 'Ingresar'}
             </button>
           </form>
 
-          <p className="mt-1 text-center text-xs text-white/40">¿No tienes acceso? Contacta a tu administrador.</p>
+          <p className="mt-1 text-center text-xs text-text">¿No tienes acceso? Contacta a tu administrador.</p>
         </div>
       </div>
     </div>
